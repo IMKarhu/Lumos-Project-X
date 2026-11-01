@@ -55,6 +55,7 @@ namespace Lumos
             uint32_t imageindex;
             uint32_t frameindex;
             VkCommandBuffer cmdbuf;
+            VkDescriptorSet set;
             //currently just for swapchain usage
             VkImage image;
             VkImageView imageview;

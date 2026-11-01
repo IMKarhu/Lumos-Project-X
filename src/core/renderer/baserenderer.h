@@ -16,6 +16,7 @@
 
 namespace Lumos
 {
+    class Buffer;
     class CORE_API RendererBase
     {
     public:
@@ -23,6 +24,7 @@ namespace Lumos
         virtual void begin(Device::FrameInfo frameinfo, VkDescriptorSet globalset) = 0;
         virtual void end(Device::FrameInfo frameinfo) = 0;
         virtual void submit(const Transform& t, Device::FrameInfo frameinfo) = 0;
+        virtual void map(Buffer& buffer) = 0;
     };
 
 } // namespace Lumos

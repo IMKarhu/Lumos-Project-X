@@ -42,6 +42,7 @@ namespace Lumos
         Buffer* getBufferByNameAndIndex(const std::string& name, uint32_t index);
 
         bool createTexture(const std::string& name, std::filesystem::path filepath);
+        Texture* getTextureByName(const std::string& name);
 
         bool allocDescriptorSets(const std::string& name, uint32_t size);
         VkDescriptorSet getSetByNameAndIndex(const std::string& name, uint32_t index);

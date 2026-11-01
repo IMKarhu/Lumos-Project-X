@@ -23,6 +23,11 @@ private:
     std::unique_ptr<Lumos::ResourceManager> m_resourcemanager;
     std::unique_ptr<Lumos::RenderFactory> m_factory;
     std::unique_ptr<Lumos::RendererBase> m_spriterenderer;
+    constexpr static std::size_t MAXSPRITES = 1000;
+
+    //testing camera stuff
+    glm::vec2 m_position{0.0f};
+    glm::vec2 m_size{10.0f, 10.0f};
 
     struct UniformBuffer
     {

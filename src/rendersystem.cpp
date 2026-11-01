@@ -3,8 +3,13 @@
 #include "renderer/device.h"
 #include "resourcemanager.h"
 #include "renderer/spriterenderer.h"
+#include "renderer/texture.h"
 #include "ecs/ecs.h"
+#include <glm/gtc/matrix_transform.hpp>
+
 #include <array>
+
+
 
 RenderSystem::RenderSystem(Lumos::Window& window)
 {
@@ -84,21 +89,33 @@ RenderSystem::RenderSystem(Lumos::Window& window)
     };
     m_resourcemanager->createDescriptorLayout("sprite", spritebindings);
 
-    m_spriteset = m_pool->allocateDescriptorSets(layouts, rcd.framesinflight);
-
-    for (size_t i = 0; i < rcd.framesinflight; i++) {
-        DescriptorWriter writer;
-        writer.writeImage(0, m_testtexture->image(), m_testtexture->sampler());
-        writer.writeBuffer(1, *m_spritebuffer, sprites.size() * sizeof(SpriteGPU), DescriptorWriter::STORAGE);
-        writer.update(*m_device, m_spriteset[i]);
+    std::vector<Lumos::Buffer*> spritestorage;
+    for (size_t i = 0; i < config.framesinflight; i++) {
+        auto buf = new Lumos::Buffer(*m_device,
+                MAXSPRITES * sizeof(Lumos::SpriteRenderer::SpriteGPU),
+                VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        spritestorage.push_back(std::move(buf));
     }
-
+    m_resourcemanager->cacheBuffers("sprite", spritestorage);
+    m_resourcemanager->createTexture("sprite", "../textures/ground_dungeon7.ktx2");
+    m_resourcemanager->allocDescriptorSets("sprite", config.framesinflight);
+    for (size_t i = 0; i < config.framesinflight; i++) {
+        Lumos::DescriptorWriter writer;
+        Lumos::Texture& tex = *m_resourcemanager->getTextureByName("sprite");
+        writer.writeImage(0, tex.image(), tex.sampler());
+        writer.writeBuffer(1, *m_resourcemanager->getBufferByNameAndIndex("sprite", i),
+                MAXSPRITES * sizeof(Lumos::SpriteRenderer::SpriteGPU),
+                Lumos::DescriptorWriter::STORAGE);
+        writer.update(*m_device, m_resourcemanager->getSetByNameAndIndex("sprite", i));
+    }
 
     Lumos::SpriteRenderer::RendererConstructDescription rcd;
     rcd.shaderfilepath = "shaders/slang.spv";
     rcd.colorformat = m_device->defaultformat();
     rcd.framesinflight = config.framesinflight;
     rcd.globlayout = m_resourcemanager->getLayoutByName("global");
+    rcd.layout = m_resourcemanager->getLayoutByName("sprite");
     m_spriterenderer = m_factory->createSpriteRenderer(*m_device, rcd);
 }
 
@@ -106,12 +123,30 @@ RenderSystem::~RenderSystem() = default;
 
 void RenderSystem::update(Ecs& ecs, float dt)
 {
+        UniformBuffer ubo{};
+        auto proj = glm::ortho(m_position.x - m_size.x * 0.5f,
+                          m_position.x + m_size.x * 0.5f,
+                          m_position.y + m_size.y * 0.5f,
+                          m_position.y - m_size.y * 0.5f,
+                          0.0f,
+                          1.0f);
+        ubo.projectionview = proj * glm::translate(glm::mat4(1.0f), glm::vec3(-m_position, 0.0f));
+
+
+        // // proj[1][1] *= -1;
+        // ubo.projectionview = proj * m_camera.view();
+        // std::memcpy(m_mappedubos[currentimage], &ubo, sizeof(ubo));
+
     auto frameinfo = m_device->startFrame();
     auto globalset = m_resourcemanager->getSetByNameAndIndex("global", frameinfo.frameindex);
+    std::memcpy(m_resourcemanager->getBufferByNameAndIndex("global ubos", frameinfo.frameindex)->map(), &ubo, sizeof(ubo));
     m_spriterenderer->begin(frameinfo, globalset);
     for (auto ent : ecs.view<Lumos::Transform>()) {
-        // DO something
+        auto& t = ecs.getComponent<Lumos::Transform>(ent);
+        m_spriterenderer->submit(t, frameinfo);
     }
+    m_spriterenderer->map(*m_resourcemanager->getBufferByNameAndIndex("sprite", frameinfo.frameindex));
+    frameinfo.set = m_resourcemanager->getSetByNameAndIndex("sprite", frameinfo.frameindex);
     m_spriterenderer->end(frameinfo);
     m_device->endFrame(frameinfo);
 }
@@ -120,3 +155,4 @@ void RenderSystem::waitForDestroy()
 {
     m_device->waitForDestroy();
 }
+

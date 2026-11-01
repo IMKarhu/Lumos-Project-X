@@ -33,3 +33,7 @@ private:
     std::vector<Tile> m_tiles;
 };
 
+namespace IsometricProjection
+{
+    glm::vec2 gridToWorld(glm::ivec2 gridposition);
+}

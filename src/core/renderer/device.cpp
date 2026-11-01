@@ -206,8 +206,6 @@ namespace Lumos
     {
         VK_CHECK(vkEndCommandBuffer(frameinfo.cmdbuf));
 
-        // updateUBOs(dt, frameindex);
-
         VkSubmitInfo submitinfo{};
         submitinfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 

@@ -9,10 +9,10 @@ Application::Application()
     m_physicssystem = std::make_unique<PhysicsSystem>();
 
     m_tiles = {
-        {.position = {0, 0}, .type = TileType::Grass},
-        {.position = {1, 0}, .type = TileType::Grass},
-        {.position = {0, 1}, .type = TileType::Stone},
-        {.position = {1, 1}, .type = TileType::Dirt},
+        {.position = IsometricProjection::gridToWorld({0, 0}), .type = TileType::Grass},
+        {.position = IsometricProjection::gridToWorld({1, 0}), .type = TileType::Grass},
+        {.position = IsometricProjection::gridToWorld({0, 1}), .type = TileType::Stone},
+        {.position = IsometricProjection::gridToWorld({1, 1}), .type = TileType::Dirt},
     };
     Ecs& ecs = m_scene.ecs();
     for (size_t i = 0; i < 4; i++) {

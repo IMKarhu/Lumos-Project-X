@@ -29,7 +29,6 @@ namespace Lumos
 
     Buffer* ResourceManager::getBufferByNameAndIndex(const std::string& name, uint32_t index)
     {
-        std::println("hello from func");
         auto it = m_buffers.find(name);
         if (it != m_buffers.end()) {
             return it->second[index];
@@ -92,6 +91,15 @@ namespace Lumos
         ktxTexture_Destroy(texture);
         auto [it, result] = m_textures.emplace(name, new Texture(std::move(image), std::move(sampler)));
         return result;
+    }
+
+    Texture* ResourceManager::getTextureByName(const std::string& name)
+    {
+        auto it = m_textures.find(name);
+        if (it != m_textures.end()) {
+            return it->second;
+        }
+        return nullptr;
     }
 
     bool ResourceManager::allocDescriptorSets(const std::string& name, uint32_t size)
