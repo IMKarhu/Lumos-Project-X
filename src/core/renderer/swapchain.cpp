@@ -1,0 +1,212 @@
+#include "swapchain.h"
+#include "device.h"
+#include "../windowing/window.h"
+#include "errorcheck.h"
+
+#include <print>
+#include <algorithm>
+
+namespace Lumos
+{
+    SwapChain::SwapChain(Device& device, Window& window, VkSwapchainKHR oldswapchain)
+        : m_device(&device)
+    {
+        SwapChainSupportDetails swapchainsupport = m_device->querySwapChainSupport(m_device->pdevice());
+        VkSurfaceFormatKHR surfaceformat = swapchainSurfaceFormat(swapchainsupport.formats);
+        VkPresentModeKHR presentmode = swapchainPresentMode(swapchainsupport.presentModes);
+        VkExtent2D extent = swapExtent(swapchainsupport.capabilities, window);
+
+        uint32_t imagecount = swapchainsupport.capabilities.minImageCount + 1;
+        if (swapchainsupport.capabilities.maxImageCount > 0
+            && imagecount > swapchainsupport.capabilities.maxImageCount) {
+            imagecount = swapchainsupport.capabilities.maxImageCount;
+        }
+        VkSwapchainCreateInfoKHR swapinfo {
+            .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
+            .surface = m_device->surface(),
+            .minImageCount = imagecount,
+            .imageFormat = surfaceformat.format,
+            .imageColorSpace = surfaceformat.colorSpace,
+            .imageExtent = extent,
+            .imageArrayLayers = 1,
+            .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+        };
+
+        auto indices = m_device->findQueueFamilies(m_device->pdevice());
+        uint32_t queuefamilyindices[] = {indices.graphicsFamily.value(), indices.presentFamily.value() };
+        if (indices.graphicsFamily != indices.presentFamily) {
+            swapinfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+            swapinfo.queueFamilyIndexCount = 2;
+            swapinfo.pQueueFamilyIndices = queuefamilyindices;
+        }
+        else
+        {
+            swapinfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+            swapinfo.queueFamilyIndexCount = 0;
+            swapinfo.pQueueFamilyIndices = nullptr;
+        }
+
+        swapinfo.preTransform = swapchainsupport.capabilities.currentTransform;
+        swapinfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+        swapinfo.presentMode = presentmode;
+        swapinfo.clipped = VK_TRUE;
+        swapinfo.oldSwapchain = oldswapchain;
+        
+        VK_CHECK(vkCreateSwapchainKHR(m_device->device(), &swapinfo, nullptr, &m_swapchain));
+        
+        VK_CHECK(vkGetSwapchainImagesKHR(m_device->device(), m_swapchain, &imagecount, nullptr));
+        m_swapchainimages.resize(imagecount);
+        VK_CHECK(vkGetSwapchainImagesKHR(m_device->device(), m_swapchain, &imagecount, m_swapchainimages.data()));
+        
+        m_swapchainimageformat = surfaceformat.format;
+        m_swapchainextent = extent;
+
+        //image views
+        m_swapchainimageviews.resize(m_swapchainimages.size());
+        for (size_t i = 0; i < m_swapchainimageviews.size(); i++) {
+            //Probably a good idea to refactor this into its own function at some point,
+            //because we are going to need to do this other places as well
+            //and would just be code duplication at that point
+            VkImageViewCreateInfo imageviewinfo {
+                .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+                .image = m_swapchainimages[i],
+                .viewType = VK_IMAGE_VIEW_TYPE_2D,
+                .format = m_swapchainimageformat,
+                .components = {
+                    .r = VK_COMPONENT_SWIZZLE_IDENTITY,
+                    .g = VK_COMPONENT_SWIZZLE_IDENTITY,
+                    .b = VK_COMPONENT_SWIZZLE_IDENTITY,
+                    .a = VK_COMPONENT_SWIZZLE_IDENTITY,
+                },
+                .subresourceRange = {
+                    .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                    .baseMipLevel = 0,
+                    .levelCount = 1,
+                    .baseArrayLayer = 0,
+                    .layerCount = 1
+                }
+            };
+            
+            VK_CHECK(vkCreateImageView(m_device->device(), &imageviewinfo, nullptr, &m_swapchainimageviews[i]));
+        }
+    }
+
+    SwapChain::~SwapChain()
+    {
+        for (auto view : m_swapchainimageviews)
+        {
+            vkDestroyImageView(m_device->device(), view, nullptr);
+        }
+        vkDestroySwapchainKHR(m_device->device(), m_swapchain, nullptr);
+    }
+
+    SwapChain::SwapChain(SwapChain&& other) noexcept
+        : m_device(other.m_device)
+        , m_swapchain(std::exchange(other.m_swapchain, VK_NULL_HANDLE))
+        , m_swapchainimageformat(std::exchange(other.m_swapchainimageformat, VK_FORMAT_UNDEFINED))
+        , m_swapchainextent(std::exchange(other.m_swapchainextent, {0,0}))
+        , m_swapchainimages(std::exchange(other.m_swapchainimages, {}))
+        , m_swapchainimageviews(std::exchange(other.m_swapchainimageviews, {}))
+    {
+        other.m_device = nullptr;
+    }
+
+    SwapChain& SwapChain::operator=(SwapChain&& other) noexcept
+    {
+        if (&other == this) {
+            return *this;
+        }
+        for (auto view : m_swapchainimageviews) {
+            vkDestroyImageView(m_device->device(), view, nullptr);
+        }
+        if (m_swapchain != VK_NULL_HANDLE) {
+            vkDestroySwapchainKHR(m_device->device(), m_swapchain, nullptr);
+        }
+
+        m_device = std::exchange(other.m_device, nullptr);
+        m_swapchain = std::exchange(other.m_swapchain, VK_NULL_HANDLE);
+        m_swapchainimageformat = std::exchange(other.m_swapchainimageformat, VK_FORMAT_UNDEFINED);
+        m_swapchainextent = std::exchange(other.m_swapchainextent, {0,0});
+        m_swapchainimages = std::exchange(other.m_swapchainimages, {});
+        m_swapchainimageviews = std::exchange(other.m_swapchainimageviews, {});
+
+        return *this;
+    }
+
+
+    VkSwapchainKHR SwapChain::swapchain() const noexcept
+    {
+        return m_swapchain;
+    }
+
+    VkFormat SwapChain::imageformat() const noexcept
+    {
+        return m_swapchainimageformat;
+    }
+
+    VkExtent2D SwapChain::extent() const noexcept
+    {
+        return m_swapchainextent;
+    }
+
+    std::vector<VkImage> SwapChain::images() const noexcept
+    {
+        return m_swapchainimages;
+    }
+    std::vector<VkImageView> SwapChain::imageviews() const noexcept
+    {
+        return m_swapchainimageviews;
+    }
+
+
+    /****** PRIVATE ******/
+    VkSurfaceFormatKHR SwapChain::swapchainSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& formats)
+    {
+        for (auto& format : std::as_const(formats))
+        {
+            if (format.format == VK_FORMAT_B8G8R8A8_SRGB && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+            {
+                std::println("SwapChain surface format: VK_FORMAT_B8G8R8A8_SRGB and colorSpace: VK_COLOR_SPACE_SRGB_NONLINEAR_KHR\n");
+                return format;
+            }
+        }
+        return formats[0];
+    }
+
+    VkPresentModeKHR SwapChain::swapchainPresentMode(const std::vector<VkPresentModeKHR>& presentmodes)
+    {
+        for (auto& presentMode : std::as_const(presentmodes))
+        {
+            if (presentMode == VK_PRESENT_MODE_MAILBOX_KHR)
+            {
+                std::println("using VK_PRESENT_MODE_MAILBOX_KHR\n");
+                return presentMode;
+            }
+        }
+        std::println("using VK_PRESENT_MODE_FIFO_KHR\n");
+        return VK_PRESENT_MODE_FIFO_KHR;
+    }
+
+    VkExtent2D SwapChain::swapExtent(const VkSurfaceCapabilitiesKHR& capabilities, Window& window)
+    {
+        if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
+        {
+            return capabilities.currentExtent;
+        }
+        else
+        {
+            int width, height;
+            glfwGetFramebufferSize(window.handle(), &width, &height);
+
+            VkExtent2D actualExtent = {
+                static_cast<uint32_t>(width),
+                static_cast<uint32_t>(height)
+            };
+
+            actualExtent.width = std::clamp(actualExtent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
+            actualExtent.height = std::clamp(actualExtent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
+
+            return actualExtent;
+        }
+    }
+} //namespace Lumos

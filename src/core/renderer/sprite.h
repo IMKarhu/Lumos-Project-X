@@ -1,0 +1,14 @@
+#pragma once
+#include <glm/glm.hpp>
+
+namespace Lumos
+{
+    class Texture;
+    struct Sprite
+    {
+        glm::vec2 position = glm::vec2(0.0f);
+        glm::vec2 size = glm::vec2(1.0f);
+        float rotation = 0.0f;
+        Texture* texture = nullptr;
+    };
+} //namespace Lumos
