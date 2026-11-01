@@ -31,8 +31,8 @@ namespace Lumos
     public:
         struct SpriteGPU
         {
-            alignas(16)glm::vec2 position;
-            alignas(16)glm::vec2 size;
+            alignas(8)glm::vec2 position;
+            alignas(8)glm::vec2 size;
             float rotation;
         };
 

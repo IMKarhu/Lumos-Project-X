@@ -143,7 +143,6 @@ namespace Lumos
         if (m_gpusprites.empty()) {
             return;
         }
-
         const VkDeviceSize bytes = m_gpusprites.size() * sizeof(SpriteGPU);
         std::println("bytes: {}", bytes);
         std::memcpy(buffer.map(), m_gpusprites.data(), bytes);

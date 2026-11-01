@@ -32,6 +32,6 @@ private:
     struct UniformBuffer
     {
         glm::mat4 projectionview = glm::mat4(1);
-        bool changed = false;
+        // bool changed = false;
     };
 };

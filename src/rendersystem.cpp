@@ -123,23 +123,22 @@ RenderSystem::~RenderSystem() = default;
 
 void RenderSystem::update(Ecs& ecs, float dt)
 {
-        UniformBuffer ubo{};
-        auto proj = glm::ortho(m_position.x - m_size.x * 0.5f,
-                          m_position.x + m_size.x * 0.5f,
-                          m_position.y + m_size.y * 0.5f,
-                          m_position.y - m_size.y * 0.5f,
-                          0.0f,
-                          1.0f);
-        ubo.projectionview = proj * glm::translate(glm::mat4(1.0f), glm::vec3(-m_position, 0.0f));
+    UniformBuffer ubo{};
+    auto proj = glm::ortho(m_position.x - m_size.x * 0.5f,
+                      m_position.x + m_size.x * 0.5f,
+                      m_position.y + m_size.y * 0.5f,
+                      m_position.y - m_size.y * 0.5f,
+                      0.0f,
+                      1.0f);
+    // proj[1][1] *= -1;
+    ubo.projectionview = proj * glm::translate(glm::mat4(1.0f), glm::vec3(-m_position, 0.0f));
 
 
-        // // proj[1][1] *= -1;
         // ubo.projectionview = proj * m_camera.view();
         // std::memcpy(m_mappedubos[currentimage], &ubo, sizeof(ubo));
 
     auto frameinfo = m_device->startFrame();
     auto globalset = m_resourcemanager->getSetByNameAndIndex("global", frameinfo.frameindex);
-    std::memcpy(m_resourcemanager->getBufferByNameAndIndex("global ubos", frameinfo.frameindex)->map(), &ubo, sizeof(ubo));
     m_spriterenderer->begin(frameinfo, globalset);
     for (auto ent : ecs.view<Lumos::Transform>()) {
         auto& t = ecs.getComponent<Lumos::Transform>(ent);
@@ -147,6 +146,8 @@ void RenderSystem::update(Ecs& ecs, float dt)
     }
     m_spriterenderer->map(*m_resourcemanager->getBufferByNameAndIndex("sprite", frameinfo.frameindex));
     frameinfo.set = m_resourcemanager->getSetByNameAndIndex("sprite", frameinfo.frameindex);
+    std::memcpy(m_resourcemanager->getBufferByNameAndIndex("global ubos", frameinfo.frameindex)->map(), &ubo, sizeof(ubo));
+    m_resourcemanager->getBufferByNameAndIndex("global ubos", frameinfo.frameindex)->unmap();
     m_spriterenderer->end(frameinfo);
     m_device->endFrame(frameinfo);
 }
