@@ -43,7 +43,7 @@ RenderSystem::RenderSystem(Lumos::Window& window)
     std::vector<Lumos::Buffer*> ubos;
     for (size_t i = 0; i < config.framesinflight; i++) {
         auto buf = new Lumos::Buffer(*m_device,
-                sizeof(UniformBuffer),
+                sizeof(Lumos::Camera),
                 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
         buf->map();
@@ -54,7 +54,7 @@ RenderSystem::RenderSystem(Lumos::Window& window)
     for (size_t i = 0; i < config.framesinflight; i++) {
         Lumos::DescriptorWriter writer;
         writer.writeBuffer(0, *m_resourcemanager->getBufferByNameAndIndex("global ubos", i),
-                sizeof(UniformBuffer),
+                sizeof(Lumos::Camera),
                 Lumos::DescriptorWriter::UNIFORM);
         writer.update(*m_device, m_resourcemanager->getSetByNameAndIndex("global", i));
     }
@@ -98,7 +98,7 @@ RenderSystem::RenderSystem(Lumos::Window& window)
         spritestorage.push_back(std::move(buf));
     }
     m_resourcemanager->cacheBuffers("sprite", spritestorage);
-    m_resourcemanager->createTexture("sprite", "../textures/ground_dungeon7.ktx2");
+    m_resourcemanager->createTexture("sprite", "../textures/testsprite.ktx2");
     m_resourcemanager->allocDescriptorSets("sprite", config.framesinflight);
     for (size_t i = 0; i < config.framesinflight; i++) {
         Lumos::DescriptorWriter writer;
@@ -123,31 +123,40 @@ RenderSystem::~RenderSystem() = default;
 
 void RenderSystem::update(Ecs& ecs, float dt)
 {
-    UniformBuffer ubo{};
-    auto proj = glm::ortho(m_position.x - m_size.x * 0.5f,
-                      m_position.x + m_size.x * 0.5f,
-                      m_position.y + m_size.y * 0.5f,
-                      m_position.y - m_size.y * 0.5f,
-                      0.0f,
-                      1.0f);
-    // proj[1][1] *= -1;
-    ubo.projectionview = proj * glm::translate(glm::mat4(1.0f), glm::vec3(-m_position, 0.0f));
 
-
-        // ubo.projectionview = proj * m_camera.view();
-        // std::memcpy(m_mappedubos[currentimage], &ubo, sizeof(ubo));
+    // UniformBuffer ubo{};
+    // auto proj = glm::ortho(m_position.x - m_size.x * 0.5f,
+    //                   m_position.x + m_size.x * 0.5f,
+    //                   m_position.y + m_size.y * 0.5f,
+    //                   m_position.y - m_size.y * 0.5f,
+    //                   0.0f,
+    //                   1.0f);
+    // // proj[1][1] *= -1;
+    // ubo.projectionview = proj * glm::translate(glm::mat4(1.0f), glm::vec3(-m_position, 0.0f));
 
     auto frameinfo = m_device->startFrame();
+    for (auto ent : ecs.view<Lumos::Camera>()) {
+        auto& t = ecs.getComponent<Lumos::Transform>(ent);
+        auto& c = ecs.getComponent<Lumos::Camera>(ent);
+        auto proj = glm::ortho(t.position.x - t.size.x * 0.5f,
+                      t.position.x + t.size.x * 0.5f,
+                      t.position.y + t.size.y * 0.5f,
+                      t.position.y - t.size.y * 0.5f,
+                      0.0f,
+                      1.0f);
+
+        c.viewproj = proj * glm::translate(glm::mat4(1.0f), glm::vec3(-t.position, 0.0f));
+        std::memcpy(m_resourcemanager->getBufferByNameAndIndex("global ubos", frameinfo.frameindex)->mappeddata(), &c, sizeof(c));
+    }
     auto globalset = m_resourcemanager->getSetByNameAndIndex("global", frameinfo.frameindex);
     m_spriterenderer->begin(frameinfo, globalset);
-    for (auto ent : ecs.view<Lumos::Transform>()) {
+    for (auto ent : ecs.view<Lumos::Tile>()) {
         auto& t = ecs.getComponent<Lumos::Transform>(ent);
         m_spriterenderer->submit(t, frameinfo);
     }
     m_spriterenderer->map(*m_resourcemanager->getBufferByNameAndIndex("sprite", frameinfo.frameindex));
     frameinfo.set = m_resourcemanager->getSetByNameAndIndex("sprite", frameinfo.frameindex);
-    std::memcpy(m_resourcemanager->getBufferByNameAndIndex("global ubos", frameinfo.frameindex)->map(), &ubo, sizeof(ubo));
-    m_resourcemanager->getBufferByNameAndIndex("global ubos", frameinfo.frameindex)->unmap();
+    //m_resourcemanager->getBufferByNameAndIndex("global ubos", frameinfo.frameindex)->unmap();
     m_spriterenderer->end(frameinfo);
     m_device->endFrame(frameinfo);
 }

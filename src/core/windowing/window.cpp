@@ -28,7 +28,7 @@ namespace Lumos
         // glfwSwapInterval(0);
         glfwSetWindowUserPointer(m_window, &m_windowdata);
         glfwSetFramebufferSizeCallback(m_window, framebufferCallback);
-        glfwSetKeyCallback(m_window, keyCallback);
+        // glfwSetKeyCallback(m_window, keyCallback);
 
     }
 
@@ -58,7 +58,7 @@ namespace Lumos
         // glfwSwapInterval(0);
         glfwSetWindowUserPointer(m_window, &m_windowdata);
         glfwSetFramebufferSizeCallback(m_window, framebufferCallback);
-        glfwSetKeyCallback(m_window, keyCallback);
+        // glfwSetKeyCallback(m_window, keyCallback);
 
     }
 
@@ -150,7 +150,7 @@ namespace Lumos
         glfwMakeContextCurrent(m_window);
         glfwSetWindowUserPointer(m_window, &m_windowdata);
         glfwSetFramebufferSizeCallback(m_window, framebufferCallback);
-        glfwSetKeyCallback(m_window, keyCallback);
+        // glfwSetKeyCallback(m_window, keyCallback);
     }
 
     void Window::framebufferCallback(GLFWwindow *window, int width, int height)
@@ -163,8 +163,8 @@ namespace Lumos
 
     void Window::keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
     {
-        WindowData data = *(WindowData*)glfwGetWindowUserPointer(window);
-        int state = glfwGetKey(window, key);
+        // WindowData data = *(WindowData*)glfwGetWindowUserPointer(window);
+        // int state = glfwGetKey(window, key);
     }
 }// namespace Lumos
 

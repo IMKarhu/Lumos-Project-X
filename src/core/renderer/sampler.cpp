@@ -5,7 +5,28 @@
 
 namespace Lumos
 {
-    Sampler::Sampler(Device& device)
+    static VkFilter filterHelper(FilterMode filtermode)
+    {
+        switch(filtermode)
+        {
+            case Lumos::FilterMode::Linear:
+                return VK_FILTER_LINEAR;
+            case Lumos::FilterMode::Nearest:
+                return VK_FILTER_NEAREST;
+            default:
+                return VK_FILTER_LINEAR;
+        }
+    }
+
+    static VkBool32 anisotropy(bool enable)
+    {
+        if (enable) {
+            return VK_TRUE;
+        }
+        return VK_FALSE;
+    }
+
+    Sampler::Sampler(Device& device, SamplerConfig config)
         : m_device(&device)
     {
         VkPhysicalDeviceProperties pdeviceproperties{};
@@ -13,13 +34,13 @@ namespace Lumos
 
         VkSamplerCreateInfo samplerinfo {
             .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
-            .magFilter = VK_FILTER_LINEAR,
-            .minFilter = VK_FILTER_LINEAR,
+            .magFilter = filterHelper(config.filtermode),
+            .minFilter = filterHelper(config.filtermode),
             .mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR,
             .addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT,
             .addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT,
             .addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT,
-            .anisotropyEnable = VK_TRUE,
+            .anisotropyEnable = anisotropy(config.enableanisotropy),
             .maxAnisotropy = pdeviceproperties.limits.maxSamplerAnisotropy,
             .compareEnable = VK_FALSE,
             .compareOp = VK_COMPARE_OP_ALWAYS,

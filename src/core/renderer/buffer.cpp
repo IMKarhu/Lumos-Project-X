@@ -85,6 +85,11 @@ namespace Lumos
         return m_size;
     }
 
+    void* Buffer::mappeddata() const noexcept
+    {
+        return m_mappeddata;
+    }
+
 
     void* Buffer::map()
     {

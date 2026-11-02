@@ -8,18 +8,24 @@ Application::Application()
     m_rendersystem = std::make_unique<RenderSystem>(*m_window);
     m_physicssystem = std::make_unique<PhysicsSystem>();
 
-    m_tiles = {
-        {.position = IsometricProjection::gridToWorld({0, 0}), .type = TileType::Grass},
-        {.position = IsometricProjection::gridToWorld({1, 0}), .type = TileType::Grass},
-        {.position = IsometricProjection::gridToWorld({0, 1}), .type = TileType::Stone},
-        {.position = IsometricProjection::gridToWorld({1, 1}), .type = TileType::Dirt},
-    };
     Ecs& ecs = m_scene.ecs();
-    for (size_t i = 0; i < 4; i++) {
+    Entity player = ecs.createEntity("player");
+    Lumos::Transform trans;
+    trans.position = glm::vec2(0.0f);
+    trans.size = glm::vec2(10.0f);
+    trans.rotation = 0.0f;
+    Lumos::Camera camera;
+    ecs.addComponent(player, trans);
+    ecs.addComponent(player, camera);
+    for (size_t i = 0; i < m_tilemap.tiles().size(); i++) {
         Entity ent = ecs.createEntity("tile");
         Lumos::Transform t;
-        t.position = m_tiles[i].position;
+        t.position = IsometricProjection::gridToWorld(m_tilemap.tiles()[i].position);
+        t.size = glm::vec2(2, 1);
+        t.rotation = 0.0f;
         ecs.addComponent(ent, t);
+        Lumos::Tile tile;
+        ecs.addComponent(ent, tile);
     }
     for(auto ent : ecs.view<Lumos::Transform>()) {
         auto& t = ecs.getComponent<Lumos::Transform>(ent);
@@ -50,7 +56,7 @@ void Application::run()
             framecount = 0.0f;
             timeaccumulator = 0.0f;
         }
-        m_physicssystem->update(m_scene.ecs(), dt);
+        m_physicssystem->update(m_scene.ecs(), m_window->handle(), dt);
         m_rendersystem->update(m_scene.ecs(), dt);
     }
     m_rendersystem->waitForDestroy();

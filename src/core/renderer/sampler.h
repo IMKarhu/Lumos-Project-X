@@ -3,11 +3,21 @@
 
 namespace Lumos
 {
+    enum class FilterMode
+    {
+        Linear,
+        Nearest
+    };
+    struct SamplerConfig
+    {
+        FilterMode filtermode = FilterMode::Nearest;
+        bool enableanisotropy = false;
+    };
     class Device;
     class Sampler
     {
         public:
-        Sampler(Device& device);
+        Sampler(Device& device, SamplerConfig config);
 
         ~Sampler();
 

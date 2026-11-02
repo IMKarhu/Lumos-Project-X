@@ -11,17 +11,14 @@ namespace Lumos
         float rotation;
     };
 
-    // struct Sprite
-    // {
-    //     //only a id handle to a texture
-    //     uint32_t id;
-    // };
-
     struct Camera
     {
-        glm::mat4 view = glm::mat4(1.0f);
-        glm::mat4 proj = glm::mat4(1.0f);
-        bool primary = false;
+        glm::mat4 viewproj = glm::mat4(1.0f);
+    };
+
+    //temporary struct for helping
+    struct Tile
+    {
     };
 
     struct Id

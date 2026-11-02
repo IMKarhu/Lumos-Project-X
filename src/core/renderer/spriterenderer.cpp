@@ -113,9 +113,6 @@ namespace Lumos
 
     void SpriteRenderer::submit(const Transform& t, Device::FrameInfo frameinfo)
     {
-        if (m_gpusprites.size() >= MAXSPRITES) {
-            // flush(frameinfo, frameinfo.cmdbuf);
-        }
 
         SpriteGPU s{};
         s.position = t.position;
@@ -144,7 +141,7 @@ namespace Lumos
             return;
         }
         const VkDeviceSize bytes = m_gpusprites.size() * sizeof(SpriteGPU);
-        std::println("bytes: {}", bytes);
+        // std::println("bytes: {}", bytes);
         std::memcpy(buffer.map(), m_gpusprites.data(), bytes);
         buffer.unmap();
     }

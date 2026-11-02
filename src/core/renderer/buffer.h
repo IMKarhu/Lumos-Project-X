@@ -32,6 +32,7 @@ namespace Lumos
 
         [[nodiscard]] VkBuffer buffer() const noexcept;
         [[nodiscard]] VkDeviceSize bufferSize() const noexcept;
+        [[nodiscard]] void* mappeddata() const noexcept;
 
         void* map();
         void unmap();

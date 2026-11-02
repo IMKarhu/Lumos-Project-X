@@ -4,20 +4,8 @@
 #include "scene.h"
 #include "rendersystem.h"
 #include "physicssystem.h"
+#include "tilemap.h"
 #include <memory>
-
-enum class TileType
-{
-    Grass,
-    Dirt,
-    Stone
-};
-
-struct Tile
-{
-    glm::vec2 position;
-    TileType type;
-};
 
 class Application
 {
@@ -30,7 +18,7 @@ private:
     std::unique_ptr<PhysicsSystem> m_physicssystem;
     Lumos::Scene m_scene;
     std::string m_titleAndfps;
-    std::vector<Tile> m_tiles;
+    TileMap m_tilemap{3, 3};
 };
 
 namespace IsometricProjection

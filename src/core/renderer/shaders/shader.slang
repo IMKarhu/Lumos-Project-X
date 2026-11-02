@@ -66,6 +66,11 @@ VertexOutput vertMain(uint vertexID : SV_VertexID) {
 
 [shader("fragment")]
 float4 fragMain(VertexOutput inVert) : SV_TARGET {
+    float texwidth = 128.0f;
+    float texheight = 32.0f;
+    float spritew = 64.0f;
+    float spriteh = 32.0f;
+
     float2 texcoord = inVert.texcoord;
-    return texture.Sample(inVert.texcoord);
+    return texture.Sample(float2(((1 + inVert.texcoord.x) * spritew) / texwidth, (inVert.texcoord.y * spriteh) / texheight));
 }
