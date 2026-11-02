@@ -1,5 +1,4 @@
 #include "spriterenderer.h"
-#include "commandpool.h"
 #include "buffer.h"
 #include "descriptor.h"
 #include <glm/glm.hpp>
@@ -46,6 +45,12 @@ namespace Lumos
         desc.pushconstantranges.push_back(pushconstant);
         m_pipeline = GraphicsPipeline::create(device, desc);
         vkDestroyShaderModule(device.device(), shadermodule, nullptr);
+        m_image = std::make_unique<Image>(*m_device, 320,
+                            180,
+                            VK_FORMAT_R8G8B8A8_SRGB,
+                            VK_IMAGE_TILING_OPTIMAL,
+                            VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
     }
 
     void SpriteRenderer::begin(Device::FrameInfo frameinfo, VkDescriptorSet globalset)

@@ -1,10 +1,20 @@
 #include "physicssystem.h"
+#include <GLFW/glfw3.h>
 #include "ecs/ecs.h"
-#include <print>
+#include "windowing/events.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
-PhysicsSystem::PhysicsSystem()
+PhysicsSystem::PhysicsSystem(Lumos::EventBus& eventbus)
 {
-
+    eventbus.subscribe<Lumos::KeyPressEvent>([&](const Lumos::KeyPressEvent& e) {
+            if (e.action == GLFW_PRESS) {
+                m_heldkeys.insert(e.key);
+            }
+            if (e.action == GLFW_RELEASE) {
+                m_heldkeys.erase(e.key);
+            }
+        });
 }
 
 PhysicsSystem::~PhysicsSystem()
@@ -12,13 +22,34 @@ PhysicsSystem::~PhysicsSystem()
 
 }
 
-void PhysicsSystem::update(Ecs& ecs, GLFWwindow* window, float dt)
+void PhysicsSystem::update(Ecs& ecs, float dt)
 {
-    for (auto ent : ecs.view<Lumos::Camera>()) {
-        // std::println("w is pressed");
+    float dx = 0.0f;
+    float dy = 0.0f;
+    if (m_heldkeys.count(GLFW_KEY_W)) dy += 1.0f;
+    if (m_heldkeys.count(GLFW_KEY_S)) dy -= 1.0f;
+    if (m_heldkeys.count(GLFW_KEY_A)) dx -= 1.0f;
+    if (m_heldkeys.count(GLFW_KEY_D)) dx += 1.0f;
+
+    if (dx == 0.0f && dy == 0.0f) {
+        return;
     }
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        std::println("w is pressed");
+    for (auto ent : ecs.view<Lumos::Camera>()) {
+        auto& t = ecs.getComponent<Lumos::Transform>(ent);
+        auto& i = ecs.getComponent<Lumos::InputState>(ent);
+        t.position.y += dy * dt;
+        t.position.x += dx * dt;
+        auto& c = ecs.getComponent<Lumos::Camera>(ent);
+        // t.position = snapToPixelGrid(t.position);
+        auto proj = glm::ortho(t.position.x - t.size.x * 0.5f,
+                      t.position.x + t.size.x * 0.5f,
+                      t.position.y + t.size.y * 0.5f,
+                      t.position.y - t.size.y * 0.5f,
+                      0.0f,
+                      1.0f);
+        // proj[1][1] *= -1;
+        c.viewproj = proj * glm::translate(glm::mat4(1.0f), glm::vec3(-t.position, 0.0f));
+        i.moved = true;
     }
     // std::println("hello from physics system");
 }

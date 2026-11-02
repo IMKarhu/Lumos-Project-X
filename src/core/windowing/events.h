@@ -1,120 +1,95 @@
 #pragma once
-#include <cstdint>
-
-#ifdef _WIN32
-    #ifdef CORE_EXPORT
-    #define CORE_API __declspec(dllexport)
-    #else
-    #define CORE_API __declspec(dllimport)
-    #endif
-#else
-    #define CORE_API
-#endif
+#include <vector>
+#include <functional>
+#include <memory>
+#include <typeindex>
+#include <queue>
+#include <print>
 
 namespace Lumos
 {
 
-    //there's probably more event types, but these came to my mind first.
-    enum class EventType
+    class EventBus
     {
-        WindowClose,
-        WindowResize,
-        KeyPressed,
-        KeyReleased,
-        MouseButtonPressed,
-        MouseButtonReleased,
-        MouseMoved
+    private:
+        struct IHandlerList
+        {
+            virtual ~IHandlerList() = default;
+        };
+        template<typename T>
+        struct HandlerList : public IHandlerList
+        {
+            std::vector<std::function<void(const T&)>> handlers;
+        };
+    public:
+        template<typename EventType>
+        void subscribe(std::function<void(const EventType&)> callback)
+        {
+            auto typeindex = std::type_index(typeid(EventType));
+            if (m_subscribers.find(typeindex) == m_subscribers.end()) {
+                m_subscribers[typeindex] = std::make_unique<HandlerList<EventType>>();
+            }
+            auto* list = static_cast<HandlerList<EventType>*>(m_subscribers[typeindex].get());
+            list->handlers.push_back(callback);
+        }
+
+        template<typename EventType>
+        void publish(const EventType& event) {
+            // std::println("publish in eventbus");
+            auto typeindex = std::type_index(typeid(EventType));
+            auto it = m_subscribers.find(typeindex);
+            if (it != m_subscribers.end()) {
+                auto* list = static_cast<HandlerList<EventType>*>(it->second.get());
+                for (const auto& handler : list->handlers) {
+                    handler(event);
+                }
+            }
+        }
+    private:
+        std::unordered_map<std::type_index, std::unique_ptr<IHandlerList>> m_subscribers;
     };
 
-    class CORE_API Event
+    struct Event
     {
-    public:
         virtual ~Event() = default;
-
-        virtual EventType eventType() const = 0;
-        virtual const char* name() const = 0;
-        bool handled = false;
+        virtual void dispatch(EventBus& bus) const = 0;
     };
 
-    class CORE_API MouseButtonPressedEvent : public Event
+    struct KeyPressEvent : public Event
+    {
+        int key;
+        int scancode;
+        int action;
+        int mods;
+        void dispatch(EventBus& bus) const override
+        {
+            bus.publish(*this);
+        }
+    };
+
+    struct ResizeEvent : public Event
+    {
+        uint32_t m_width = 0;
+        uint32_t m_height = 0;
+        bool m_framebufferresized = false;
+    };
+
+    class EventQueue
     {
     public:
-        MouseButtonPressedEvent(int button);
+        template<typename EventType, typename... Args>
+        void emit(Args&&... args) {
+            std::println("emitted");
+            m_queue.push(std::make_unique<EventType>(std::forward<Args>(args)...));
+        }
 
-        int button() const;
-        static EventType staticType();
-        virtual EventType eventType() const override;
-        virtual const char* name() const override;
+        void process(EventBus& bus) {
+            while (!m_queue.empty()) {
+                m_queue.front()->dispatch(bus);
+                m_queue.pop();
+            }
+        }
     private:
-        int m_button;
+        std::queue<std::unique_ptr<Event>> m_queue;
     };
-
-    class CORE_API MouseButtonReleasedEvent : public Event
-    {
-    public:
-        MouseButtonReleasedEvent(int button);
-
-        int button() const;
-        static EventType staticType();
-        virtual EventType eventType() const override;
-        virtual const char* name() const override;
-    private:
-        int m_button;
-    };
-
-    class CORE_API KeyPressedEvent : public Event
-    {
-    public:
-        KeyPressedEvent(int button);
-
-        int button() const;
-        static EventType staticType();
-        virtual EventType eventType() const override;
-        virtual const char* name() const override;
-    private:
-        int m_button;
-    };
-
-    class CORE_API KeyReleasedEvent : public Event
-    {
-    public:
-        KeyReleasedEvent(int button);
-
-        int button() const;
-        static EventType staticType();
-        virtual EventType eventType() const override;
-        virtual const char* name() const override;
-    private:
-        int m_button;
-    };
-
-    class CORE_API WindowResizeEvent : public Event
-    {
-    public:
-        WindowResizeEvent(uint32_t width, uint32_t height);
-
-        uint32_t width() const;
-        uint32_t height() const;
-        static EventType staticType();
-        virtual EventType eventType() const override;
-        virtual const char* name() const override;
-    private:
-        uint32_t m_width;
-        uint32_t m_height;
-    };
-
-    class CORE_API WindowCloseEvent : public Event
-    {
-    public:
-        WindowCloseEvent() = default;
-
-        int button() const;
-        static EventType staticType();
-        virtual EventType eventType() const override;
-        virtual const char* name() const override;
-    private:
-    };
-
-
-}//namespace Lumos
-
+} //namespace Lumos

@@ -18,12 +18,14 @@ public:
     ~RenderSystem();
     void update(Ecs& ecs, float dt);
     void waitForDestroy();
+    glm::vec2 snapToPixelGrid(glm::vec2 position);
+
 private:
     std::unique_ptr<Lumos::Device> m_device;
     std::unique_ptr<Lumos::ResourceManager> m_resourcemanager;
     std::unique_ptr<Lumos::RenderFactory> m_factory;
     std::unique_ptr<Lumos::RendererBase> m_spriterenderer;
-    constexpr static std::size_t MAXSPRITES = 10000;
+    constexpr static std::size_t MAXSPRITES = 100000;
 
     //testing camera stuff
     glm::vec2 m_position{0.0f};

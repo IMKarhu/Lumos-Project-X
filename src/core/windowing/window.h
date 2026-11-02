@@ -34,6 +34,7 @@ namespace Lumos
             void setWindowShouldClose(bool close);
             void setWindowTitle(const std::string& title);
             void setFramebufferResized(bool resized);
+            void setUserPtr(void* ptr);
             void pollEvents();
             void waitEvents();
             void swapBuffers();

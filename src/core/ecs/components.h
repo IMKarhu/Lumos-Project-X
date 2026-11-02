@@ -26,4 +26,9 @@ namespace Lumos
         std::string name;
         uint32_t id;
     };
+
+    struct InputState
+    {
+        bool moved = false;
+    };
 }// namespace Lumos

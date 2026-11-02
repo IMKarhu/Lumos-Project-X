@@ -1,4 +1,5 @@
 #include "window.h"
+#include "events.h"
 #include <print>
 
 namespace Lumos
@@ -26,9 +27,9 @@ namespace Lumos
         }
         glfwMakeContextCurrent(m_window);
         // glfwSwapInterval(0);
-        glfwSetWindowUserPointer(m_window, &m_windowdata);
+        // glfwSetWindowUserPointer(m_window, &m_windowdata);
         glfwSetFramebufferSizeCallback(m_window, framebufferCallback);
-        // glfwSetKeyCallback(m_window, keyCallback);
+        glfwSetKeyCallback(m_window, keyCallback);
 
     }
 
@@ -56,10 +57,9 @@ namespace Lumos
         }
         glfwMakeContextCurrent(m_window);
         // glfwSwapInterval(0);
-        glfwSetWindowUserPointer(m_window, &m_windowdata);
+        // glfwSetWindowUserPointer(m_window, &m_windowdata);
         glfwSetFramebufferSizeCallback(m_window, framebufferCallback);
-        // glfwSetKeyCallback(m_window, keyCallback);
-
+        glfwSetKeyCallback(m_window, keyCallback);
     }
 
     Window::~Window()
@@ -112,6 +112,11 @@ namespace Lumos
         m_windowdata.m_framebufferresized = resized;
     }
 
+    void Window::setUserPtr(void* ptr)
+    {
+        glfwSetWindowUserPointer(m_window, ptr);
+    }
+
     void Window::pollEvents()
     {
         glfwPollEvents();
@@ -148,23 +153,29 @@ namespace Lumos
             return ;
         }
         glfwMakeContextCurrent(m_window);
-        glfwSetWindowUserPointer(m_window, &m_windowdata);
+        // glfwSetWindowUserPointer(m_window, &m_windowdata);
         glfwSetFramebufferSizeCallback(m_window, framebufferCallback);
-        // glfwSetKeyCallback(m_window, keyCallback);
+        glfwSetKeyCallback(m_window, keyCallback);
     }
 
     void Window::framebufferCallback(GLFWwindow *window, int width, int height)
     {
-        WindowData data = *(WindowData*)glfwGetWindowUserPointer(window);
-        data.m_width = width;
-        data.m_height = height;
-        data.m_framebufferresized = true;
+        auto* eventbus = static_cast<EventBus*>(glfwGetWindowUserPointer(window));
+        if (eventbus) {
+        }
     }
 
     void Window::keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
     {
-        // WindowData data = *(WindowData*)glfwGetWindowUserPointer(window);
-        // int state = glfwGetKey(window, key);
+        auto* eventbus = static_cast<EventBus*>(glfwGetWindowUserPointer(window));
+        if (eventbus) {
+            KeyPressEvent event;
+            event.key = key;
+            event.scancode = scancode;
+            event.action = action;
+            event.mods = mods;
+            eventbus->publish(event);
+        }
     }
 }// namespace Lumos
 

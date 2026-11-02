@@ -4,6 +4,7 @@
 #include "resourcemanager.h"
 #include "renderer/spriterenderer.h"
 #include "renderer/texture.h"
+#include "renderer/buffer.h"
 #include "ecs/ecs.h"
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -124,29 +125,14 @@ RenderSystem::~RenderSystem() = default;
 void RenderSystem::update(Ecs& ecs, float dt)
 {
 
-    // UniformBuffer ubo{};
-    // auto proj = glm::ortho(m_position.x - m_size.x * 0.5f,
-    //                   m_position.x + m_size.x * 0.5f,
-    //                   m_position.y + m_size.y * 0.5f,
-    //                   m_position.y - m_size.y * 0.5f,
-    //                   0.0f,
-    //                   1.0f);
-    // // proj[1][1] *= -1;
-    // ubo.projectionview = proj * glm::translate(glm::mat4(1.0f), glm::vec3(-m_position, 0.0f));
-
     auto frameinfo = m_device->startFrame();
     for (auto ent : ecs.view<Lumos::Camera>()) {
-        auto& t = ecs.getComponent<Lumos::Transform>(ent);
-        auto& c = ecs.getComponent<Lumos::Camera>(ent);
-        auto proj = glm::ortho(t.position.x - t.size.x * 0.5f,
-                      t.position.x + t.size.x * 0.5f,
-                      t.position.y + t.size.y * 0.5f,
-                      t.position.y - t.size.y * 0.5f,
-                      0.0f,
-                      1.0f);
-
-        c.viewproj = proj * glm::translate(glm::mat4(1.0f), glm::vec3(-t.position, 0.0f));
-        std::memcpy(m_resourcemanager->getBufferByNameAndIndex("global ubos", frameinfo.frameindex)->mappeddata(), &c, sizeof(c));
+        auto& input = ecs.getComponent<Lumos::InputState>(ent);
+        if (input.moved) {
+            auto& c = ecs.getComponent<Lumos::Camera>(ent);
+            std::memcpy(m_resourcemanager->getBufferByNameAndIndex("global ubos", frameinfo.frameindex)->mappeddata(), &c, sizeof(c));
+            input.moved = false;
+        }
     }
     auto globalset = m_resourcemanager->getSetByNameAndIndex("global", frameinfo.frameindex);
     m_spriterenderer->begin(frameinfo, globalset);
@@ -166,3 +152,9 @@ void RenderSystem::waitForDestroy()
     m_device->waitForDestroy();
 }
 
+glm::vec2 RenderSystem::snapToPixelGrid(glm::vec2 position)
+{
+    constexpr float pixelsPerWorldUnit = 32.0f;
+    return glm::round(position * pixelsPerWorldUnit)
+     / pixelsPerWorldUnit;
+}

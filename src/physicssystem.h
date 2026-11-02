@@ -1,12 +1,18 @@
 #pragma once
-#include "GLFW/glfw3.h"
+#include <unordered_set>
 
 class Ecs;
+namespace Lumos
+{
+    class EventBus;
+}
+
 class PhysicsSystem
 {
 public:
-    PhysicsSystem();
+    PhysicsSystem(Lumos::EventBus& eventbus);
     ~PhysicsSystem();
-    void update(Ecs& ecs, GLFWwindow* window, float dt);
+    void update(Ecs& ecs, float dt);
 private:
+    std::unordered_set<int> m_heldkeys;
 };

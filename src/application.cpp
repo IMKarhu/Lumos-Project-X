@@ -1,22 +1,36 @@
 #include "application.h"
+#include <glm/gtc/matrix_transform.hpp>
 #include <chrono>
 #include <format>
 
 Application::Application()
 {
     m_window = std::make_unique<Lumos::Window>(1080, 720, "test");
+    m_window->setUserPtr(&m_eventbus);
     m_rendersystem = std::make_unique<RenderSystem>(*m_window);
-    m_physicssystem = std::make_unique<PhysicsSystem>();
+    m_physicssystem = std::make_unique<PhysicsSystem>(m_eventbus);
 
     Ecs& ecs = m_scene.ecs();
     Entity player = ecs.createEntity("player");
     Lumos::Transform trans;
     trans.position = glm::vec2(0.0f);
-    trans.size = glm::vec2(10.0f);
+    trans.size = glm::vec2(5.0f);
     trans.rotation = 0.0f;
     Lumos::Camera camera;
+    auto proj = glm::ortho(trans.position.x - trans.size.x * 0.5f,
+                  trans.position.x + trans.size.x * 0.5f,
+                  trans.position.y + trans.size.y * 0.5f,
+                  trans.position.y - trans.size.y * 0.5f,
+                  0.0f,
+                  1.0f);
+    // proj[1][1] *= -1;
+    camera.viewproj = proj * glm::translate(glm::mat4(1.0f), glm::vec3(-trans.position, 0.0f));
+
+    Lumos::InputState inputstate;
+    inputstate.moved = true;
     ecs.addComponent(player, trans);
     ecs.addComponent(player, camera);
+    ecs.addComponent(player, inputstate);
     for (size_t i = 0; i < m_tilemap.tiles().size(); i++) {
         Entity ent = ecs.createEntity("tile");
         Lumos::Transform t;
@@ -26,10 +40,6 @@ Application::Application()
         ecs.addComponent(ent, t);
         Lumos::Tile tile;
         ecs.addComponent(ent, tile);
-    }
-    for(auto ent : ecs.view<Lumos::Transform>()) {
-        auto& t = ecs.getComponent<Lumos::Transform>(ent);
-        std::println("position of entities: {}, {}", t.position.x, t.position.y);
     }
 }
 
@@ -42,6 +52,7 @@ void Application::run()
     float curfps = 0.0f;
     while(!m_window->shouldClose()) {
         m_window->pollEvents();
+        m_eventqueue.process(m_eventbus);
         auto current = std::chrono::high_resolution_clock::now();
         float dt = std::chrono::duration<float>(current - start).count();
         start = current;
@@ -56,7 +67,7 @@ void Application::run()
             framecount = 0.0f;
             timeaccumulator = 0.0f;
         }
-        m_physicssystem->update(m_scene.ecs(), m_window->handle(), dt);
+        m_physicssystem->update(m_scene.ecs(), dt);
         m_rendersystem->update(m_scene.ecs(), dt);
     }
     m_rendersystem->waitForDestroy();

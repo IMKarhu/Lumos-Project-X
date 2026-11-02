@@ -2,6 +2,7 @@ add_library(core
     SHARED
     windowing/window.cpp
     windowing/window.h
+    windowing/events.h
     renderer/renderfactory.h
     renderer/errorcheck.h
     renderer/utils.h
@@ -27,7 +28,6 @@ add_library(core
     renderer/texture.cpp
     renderer/descriptor.h
     renderer/descriptor.cpp
-    renderer/sprite.h
     renderer/spriterenderer.h
     renderer/spriterenderer.cpp
     renderer/vertex.h

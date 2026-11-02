@@ -2,13 +2,12 @@
 #include "baserenderer.h"
 #include "device.h"
 #include "pipeline.h"
-#include "descriptor.h"
-#include "buffer.h"
-#include "sprite.h"
+#include "image.h"
 #include "../ecs/components.h"
 #include <vulkan/vulkan.h>
 
 #include <vector>
+#include <memory>
 
 #ifdef _WIN32
     #ifdef CORE_EXPORT
@@ -23,9 +22,8 @@
 
 namespace Lumos
 {
-    // class Device;
-    class CommandPool;
-    class Camera2D;
+    class Image;
+    class Buffer;
     class CORE_API SpriteRenderer : public RendererBase
     {
     public:
@@ -52,12 +50,11 @@ namespace Lumos
         void submit(const Transform& t, Device::FrameInfo frameinfo) override;
         void end(Device::FrameInfo frameinfo) override;
         void map(Buffer& buffer) override;
-        void prepareSprites(std::vector<Sprite>& sprites, CommandPool& pool, RendererConstructDescription rcd);
     private:
-        constexpr static std::size_t MAXSPRITES = 1000;
         Device* m_device = nullptr;
         GraphicsPipeline m_pipeline;
         std::vector<SpriteGPU> m_gpusprites;
+        std::unique_ptr<Image> m_image;
         
         struct PushConstant
         {

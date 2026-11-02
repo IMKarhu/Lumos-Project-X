@@ -1,6 +1,6 @@
 #pragma once
 #include "windowing/window.h"
-#include "renderer/renderer.h"
+#include "windowing/events.h"
 #include "scene.h"
 #include "rendersystem.h"
 #include "physicssystem.h"
@@ -16,6 +16,8 @@ private:
     std::unique_ptr<Lumos::Window> m_window;
     std::unique_ptr<RenderSystem> m_rendersystem;
     std::unique_ptr<PhysicsSystem> m_physicssystem;
+    Lumos::EventBus m_eventbus;
+    Lumos::EventQueue m_eventqueue;
     Lumos::Scene m_scene;
     std::string m_titleAndfps;
     TileMap m_tilemap{3, 3};
