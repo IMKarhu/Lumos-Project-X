@@ -1,0 +1,14 @@
+{
+    "texture": "terrain.ktx",
+    "size": [128, 32],
+    "regions": {
+        "floor": {
+            "position": [0, 0],
+            "size": [64, 32]
+        },
+        "floor2": {
+            "position": [64, 0],
+            "size": [64, 32]
+        }
+    }
+}
