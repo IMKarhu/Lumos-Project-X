@@ -7,3 +7,9 @@
 [submodule "ext/glm"]
 	path = ext/glm
 	url = https://github.com/g-truc/glm
+[submodule "KTX-Software"]
+	path = KTX-Software
+	url = https://github.com/KhronosGroup/KTX-Software.git
+[submodule "ext/KTX-Software"]
+	path = ext/KTX-Software
+	url = https://github.com/KhronosGroup/KTX-Software.git
