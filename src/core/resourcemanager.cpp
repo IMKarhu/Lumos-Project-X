@@ -24,6 +24,7 @@ namespace Lumos
     bool ResourceManager::cacheBuffers(const std::string& name, std::vector<Buffer*> buffers)
     {
         auto [it, result] = m_buffers.emplace(name, buffers);
+        std::println("caching buffer: {}", name);
         return result;
     }
 

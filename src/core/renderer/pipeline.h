@@ -12,7 +12,7 @@ namespace Lumos
         std::vector<VkDescriptorSetLayout> descriptorlayouts;
         VkPrimitiveTopology topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
         VkPolygonMode polygonmode = VK_POLYGON_MODE_FILL;
-        VkCullModeFlags cullmode = VK_CULL_MODE_NONE; //OR FOR NOW VK_CULL_MODE_NONE VK_CULL_MODE_BACK_BIT
+        VkCullModeFlags cullmode = VK_CULL_MODE_NONE;//OR FOR NOW VK_CULL_MODE_NONE VK_CULL_MODE_BACK_BIT
         VkFrontFace frontface = VK_FRONT_FACE_COUNTER_CLOCKWISE;
         bool depthtest = true;
         bool depthwrite = true;
@@ -20,6 +20,7 @@ namespace Lumos
         bool dynamicscissor = true;
         VkFormat colorformat = VK_FORMAT_UNDEFINED;
         VkFormat depthformat = VK_FORMAT_UNDEFINED;
+        VkBlendFactor dstalphablendfactor = VK_BLEND_FACTOR_ZERO; 
         uint32_t pushconstantcount = 0;
         std::vector<VkPushConstantRange> pushconstantranges;
     };

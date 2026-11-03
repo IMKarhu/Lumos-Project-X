@@ -25,6 +25,7 @@ private:
     std::unique_ptr<Lumos::ResourceManager> m_resourcemanager;
     std::unique_ptr<Lumos::RenderFactory> m_factory;
     std::unique_ptr<Lumos::RendererBase> m_spriterenderer;
+    std::unique_ptr<Lumos::RendererBase> m_scenerenderer;
     constexpr static std::size_t MAXSPRITES = 100000;
 
     //testing camera stuff
@@ -35,5 +36,5 @@ private:
     {
         glm::mat4 projectionview = glm::mat4(1);
         // bool changed = false;
-    };
+    } m_uniformbuffer;
 };

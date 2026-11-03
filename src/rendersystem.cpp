@@ -3,14 +3,13 @@
 #include "renderer/device.h"
 #include "resourcemanager.h"
 #include "renderer/spriterenderer.h"
+#include "renderer/scenerenderer.h"
 #include "renderer/texture.h"
 #include "renderer/buffer.h"
 #include "ecs/ecs.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <array>
-
-
 
 RenderSystem::RenderSystem(Lumos::Window& window)
 {
@@ -100,6 +99,7 @@ RenderSystem::RenderSystem(Lumos::Window& window)
     }
     m_resourcemanager->cacheBuffers("sprite", spritestorage);
     m_resourcemanager->createTexture("sprite", "../textures/testsprite.ktx2");
+    // m_resourcemanager->createTexture("sprite", "../textures/witch_player_first.ktx2");
     m_resourcemanager->allocDescriptorSets("sprite", config.framesinflight);
     for (size_t i = 0; i < config.framesinflight; i++) {
         Lumos::DescriptorWriter writer;
@@ -112,38 +112,72 @@ RenderSystem::RenderSystem(Lumos::Window& window)
     }
 
     Lumos::SpriteRenderer::RendererConstructDescription rcd;
-    rcd.shaderfilepath = "shaders/slang.spv";
+    rcd.shaderfilepath = "shaders/sprite.spv";
     rcd.colorformat = m_device->defaultformat();
     rcd.framesinflight = config.framesinflight;
     rcd.globlayout = m_resourcemanager->getLayoutByName("global");
     rcd.layout = m_resourcemanager->getLayoutByName("sprite");
     m_spriterenderer = m_factory->createSpriteRenderer(*m_device, rcd);
+
+    const std::array presentationpool {
+        Lumos::PoolConfig {
+            .count = config.framesinflight,
+            .type = Lumos::DescriptorType::CombinedImageSampler
+        },
+    };
+    m_resourcemanager->createDescriptorPool("presentation", presentationpool, config.framesinflight);
+
+    const std::array presentationbindings {
+        Lumos::BindingConfig {
+            .binding = 0,
+            .type = Lumos::DescriptorType::CombinedImageSampler,
+            .count = 1,
+            .flags = Lumos::StageFlags::Fragment
+        },
+    };
+    m_resourcemanager->createDescriptorLayout("presentation", spritebindings);
+    m_resourcemanager->allocDescriptorSets("presentation", config.framesinflight);
+    for (size_t i = 0; i < config.framesinflight; i++) {
+        Lumos::DescriptorWriter writer;
+        auto img = m_spriterenderer->offscreenImage();
+        auto sampler = m_spriterenderer->offscreenSampler();
+        writer.writeImage(0, *img, *sampler);
+        writer.update(*m_device, m_resourcemanager->getSetByNameAndIndex("presentation", i));
+    }
+
+    Lumos::SceneRenderer::RendererConstructDescription scenercd;
+    scenercd.shaderfilepath = "shaders/presentation.spv";
+    scenercd.colorformat = m_device->defaultformat();
+    scenercd.framesinflight = config.framesinflight;
+    scenercd.layout = m_resourcemanager->getLayoutByName("presentation");
+    m_scenerenderer = m_factory->createSceneRenderer(*m_device, scenercd);
 }
 
 RenderSystem::~RenderSystem() = default;
 
 void RenderSystem::update(Ecs& ecs, float dt)
 {
-
     auto frameinfo = m_device->startFrame();
+    std::memcpy(m_resourcemanager->getBufferByNameAndIndex("global ubos", frameinfo.frameindex)->mappeddata(), &m_uniformbuffer, sizeof(m_uniformbuffer));
     for (auto ent : ecs.view<Lumos::Camera>()) {
-        auto& input = ecs.getComponent<Lumos::InputState>(ent);
-        if (input.moved) {
-            auto& c = ecs.getComponent<Lumos::Camera>(ent);
-            std::memcpy(m_resourcemanager->getBufferByNameAndIndex("global ubos", frameinfo.frameindex)->mappeddata(), &c, sizeof(c));
-            input.moved = false;
-        }
+        auto& c = ecs.getComponent<Lumos::Camera>(ent);
+        std::memcpy(m_resourcemanager->getBufferByNameAndIndex("global ubos", frameinfo.frameindex)->mappeddata(), &c, sizeof(c));
     }
+
     auto globalset = m_resourcemanager->getSetByNameAndIndex("global", frameinfo.frameindex);
     m_spriterenderer->begin(frameinfo, globalset);
     for (auto ent : ecs.view<Lumos::Tile>()) {
         auto& t = ecs.getComponent<Lumos::Transform>(ent);
-        m_spriterenderer->submit(t, frameinfo);
+        auto& tile = ecs.getComponent<Lumos::Tile>(ent);
+        m_spriterenderer->submit(t, tile, frameinfo);
     }
     m_spriterenderer->map(*m_resourcemanager->getBufferByNameAndIndex("sprite", frameinfo.frameindex));
     frameinfo.set = m_resourcemanager->getSetByNameAndIndex("sprite", frameinfo.frameindex);
-    //m_resourcemanager->getBufferByNameAndIndex("global ubos", frameinfo.frameindex)->unmap();
     m_spriterenderer->end(frameinfo);
+
+    m_scenerenderer->begin(frameinfo, globalset);
+    frameinfo.set = m_resourcemanager->getSetByNameAndIndex("presentation", frameinfo.frameindex);
+    m_scenerenderer->end(frameinfo);
     m_device->endFrame(frameinfo);
 }
 

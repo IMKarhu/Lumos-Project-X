@@ -109,7 +109,7 @@ namespace Lumos
             .dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
             .colorBlendOp = VK_BLEND_OP_ADD,
             .srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE,
-            .dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO,
+            .dstAlphaBlendFactor = desc.dstalphablendfactor,
             .alphaBlendOp = VK_BLEND_OP_ADD,
             .colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT
         };
@@ -180,7 +180,6 @@ namespace Lumos
         };
 
         VK_CHECK(vkCreateGraphicsPipelines(device.device(), VK_NULL_HANDLE, 1, &pipelineinfo, nullptr, &pipeline.m_pipeline));
-        std::println("end");
         return pipeline;
     }
 

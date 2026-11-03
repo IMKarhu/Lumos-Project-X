@@ -8,6 +8,10 @@ add_executable(game
     physicssystem.cpp
     tilemap.h
     tilemap.cpp
+    textureatlas.h
+    textureatlas.cpp
+    AtlasLoader.h
+    AtlasLoader.cpp
 )
 
 set_property(TARGET game PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/buildvs")

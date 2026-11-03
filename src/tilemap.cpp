@@ -48,6 +48,11 @@ const Tile* TileMap::tileAt(glm::ivec2 gridposition) const
     return &m_tiles[indexOf(gridposition)];
 }
 
+glm::vec2 TileMap::tileToWorld(int col, int row) const
+{
+    return {(col - row) * 1.0f, (col + row) * 0.5f };
+}
+
 /*********PRIVATE*******/
 
 bool TileMap::contains(glm::ivec2 position) const

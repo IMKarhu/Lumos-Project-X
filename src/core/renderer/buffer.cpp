@@ -21,7 +21,7 @@ namespace Lumos
 
         VkMemoryRequirements memrequirements;
         vkGetBufferMemoryRequirements(m_device->device(), m_buffer, &memrequirements);
-        
+
         VkMemoryAllocateInfo allocinfo{
             .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
             .allocationSize = memrequirements.size,
@@ -30,6 +30,7 @@ namespace Lumos
 
         std::println("------------------INFORMATION START------------------");
         std::println("reguested buffer size: {}", buffersize);
+        std::println("memory requirements alignment: {}", memrequirements.alignment);
         std::println("memory requirements size: {}", memrequirements.size);
         std::println("stored buffer size: {}", m_size);
         std::println("------------------INFORMATION END------------------");

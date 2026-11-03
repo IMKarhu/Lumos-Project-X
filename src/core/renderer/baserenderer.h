@@ -17,14 +17,18 @@
 namespace Lumos
 {
     class Buffer;
+    class Image;
+    class Sampler;
     class CORE_API RendererBase
     {
     public:
         virtual ~RendererBase() = default;
         virtual void begin(Device::FrameInfo frameinfo, VkDescriptorSet globalset) = 0;
         virtual void end(Device::FrameInfo frameinfo) = 0;
-        virtual void submit(const Transform& t, Device::FrameInfo frameinfo) = 0;
+        virtual void submit(const Transform& t, const Tile& tile, Device::FrameInfo frameinfo) = 0;
         virtual void map(Buffer& buffer) = 0;
+        virtual Image* offscreenImage() const = 0;
+        virtual Sampler* offscreenSampler() const = 0;
     };
 
 } // namespace Lumos

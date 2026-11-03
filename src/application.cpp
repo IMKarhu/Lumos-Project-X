@@ -1,20 +1,29 @@
 #include "application.h"
+#include "textureatlas.h"
+#include "atlasloader.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <chrono>
 #include <format>
 
 Application::Application()
 {
-    m_window = std::make_unique<Lumos::Window>(1080, 720, "test");
+    m_window = std::make_unique<Lumos::Window>(1280, 720, "test");
     m_window->setUserPtr(&m_eventbus);
     m_rendersystem = std::make_unique<RenderSystem>(*m_window);
     m_physicssystem = std::make_unique<PhysicsSystem>(m_eventbus);
+
+    m_eventbus.subscribe<Lumos::KeyPressEvent>([&](const Lumos::KeyPressEvent& e) {
+            if (e.action == GLFW_PRESS && e.key == GLFW_KEY_ESCAPE) {
+                m_window->setWindowShouldClose(true);
+            }
+        });
+
 
     Ecs& ecs = m_scene.ecs();
     Entity player = ecs.createEntity("player");
     Lumos::Transform trans;
     trans.position = glm::vec2(0.0f);
-    trans.size = glm::vec2(5.0f);
+    trans.size = glm::vec2({20.0f, 10.0f});
     trans.rotation = 0.0f;
     Lumos::Camera camera;
     auto proj = glm::ortho(trans.position.x - trans.size.x * 0.5f,
@@ -31,6 +40,11 @@ Application::Application()
     ecs.addComponent(player, trans);
     ecs.addComponent(player, camera);
     ecs.addComponent(player, inputstate);
+    bool testbool = true;
+    auto atlas = AtlasLoader::load("../testjsons/test.json");
+    // TextureAtlas atlas({128, 32});
+    atlas.addRegion("floor", {0,0}, {64, 32});
+    atlas.addRegion("floor2", {64,0}, {64, 32});
     for (size_t i = 0; i < m_tilemap.tiles().size(); i++) {
         Entity ent = ecs.createEntity("tile");
         Lumos::Transform t;
@@ -39,6 +53,17 @@ Application::Application()
         t.rotation = 0.0f;
         ecs.addComponent(ent, t);
         Lumos::Tile tile;
+        if(testbool) {
+            auto uvrect = atlas.uvRect("floor");
+            tile.uvrect = uvrect;
+            testbool = false;
+        }
+        else
+        {
+            auto uvrect = atlas.uvRect("floor2");
+            tile.uvrect = uvrect;
+            testbool = true;
+        }
         ecs.addComponent(ent, tile);
     }
 }

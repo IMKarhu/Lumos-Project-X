@@ -1,6 +1,7 @@
 #pragma once
 #include "device.h"
 #include "spriterenderer.h"
+#include "scenerenderer.h"
 #include <memory>
 
 namespace Lumos
@@ -18,6 +19,11 @@ namespace Lumos
         std::unique_ptr<RendererBase> createSpriteRenderer(Device& device, SpriteRenderer::RendererConstructDescription rcd) const
         {
             return std::make_unique<SpriteRenderer>(device, rcd);
+        }
+
+        std::unique_ptr<RendererBase> createSceneRenderer(Device& device, SceneRenderer::RendererConstructDescription rcd)
+        {
+            return std::make_unique<SceneRenderer>(device, rcd);
         }
     };
 

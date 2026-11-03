@@ -60,6 +60,8 @@ namespace Lumos
             VkImage image;
             VkImageView imageview;
             VkExtent2D extent;
+            VkImage offscreenimage;
+            VkSampler offscreensampler;
         };
 
         Device(Window& window, VulkanConfig config);

@@ -1,9 +1,9 @@
-#include "terrainrenderer.h"
+#include "scenerenderer.h"
 
 
 namespace Lumos
 {
-    TerrainRenderer::TerrainRenderer(Device& device, RendererConstructDescription rcd)
+    SceneRenderer::SceneRenderer(Device& device, RendererConstructDescription rcd)
         : m_device(&device)
     {
         auto code = readFile(rcd.shaderfilepath);
@@ -27,31 +27,28 @@ namespace Lumos
             vertexShaderStageCI,
             fragmentShaderStageCI
         };
-        // desc.vertexbindings.push_back(Vertex::bindingDescription());
-        // desc.vertexattributes = Vertex::attributeDescription();
         desc.colorformat = rcd.colorformat;
-        desc.descriptorlayouts.push_back(rcd.globlayout);
         desc.descriptorlayouts.push_back(rcd.layout);
-        // VkPushConstantRange pushconstant{
-        //     .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
-        //     .offset = 0,
-        //     .size = sizeof(PushConstant)
-        // };
         desc.pushconstantcount = 0;
-        // desc.pushconstantranges.push_back(pushconstant);
+        desc.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+        desc.polygonmode = VK_POLYGON_MODE_FILL;
+        desc.cullmode = VK_CULL_MODE_NONE;
+        desc.frontface = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+        desc.dstalphablendfactor = VK_BLEND_FACTOR_ZERO; 
+
         m_pipeline = GraphicsPipeline::create(device, desc);
         vkDestroyShaderModule(device.device(), shadermodule, nullptr);
     }
 
-    void TerrainRenderer::begin(Device::FrameInfo frameinfo, VkDescriptorSet globalset)
+    void SceneRenderer::begin(Device::FrameInfo frameinfo, VkDescriptorSet globalset)
     {
         m_device->transitionImageLayout(frameinfo.image,
                               frameinfo.cmdbuf,
                               VK_IMAGE_LAYOUT_UNDEFINED,
                               VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL,
+                              VK_PIPELINE_STAGE_2_NONE,
                               VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
-                              VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
-                              {},
+                              VK_ACCESS_2_NONE,
                               VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT);
 
         VkClearValue clearvalue{};
@@ -95,27 +92,47 @@ namespace Lumos
         vkCmdBindPipeline(frameinfo.cmdbuf,
                           VK_PIPELINE_BIND_POINT_GRAPHICS,
                           m_pipeline.pipeline());
+    }
 
+    /*
+     * we don't actually need to submit anything in scene rendering
+    */
+    void SceneRenderer::submit(const Transform& t, const Tile& tile, Device::FrameInfo frameinfo) {}
+
+    void SceneRenderer::end(Device::FrameInfo frameinfo)
+    {
+        flush(frameinfo);
+        vkCmdEndRendering(frameinfo.cmdbuf);
+        m_device->transitionImageLayout(frameinfo.image,
+                              frameinfo.cmdbuf,
+                              VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL,
+                              VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+                              VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+                              VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT,
+                              VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
+                              {});
+    }
+
+    void SceneRenderer::map(Buffer& buffer){}
+    Image* SceneRenderer::offscreenImage() const {return nullptr;}
+    Sampler* SceneRenderer::offscreenSampler() const {return nullptr;}
+
+
+
+    /**********PRIVATE**********/
+    
+
+    void SceneRenderer::flush(Device::FrameInfo frameinfo)
+    {
         vkCmdBindDescriptorSets(frameinfo.cmdbuf,
-                                VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                m_pipeline.layout(),
-                                0,
-                                1,
-                                &globalset,
-                                0,
-                                nullptr);
+                VK_PIPELINE_BIND_POINT_GRAPHICS,
+                m_pipeline.layout(),
+                0,
+                1,
+                &frameinfo.set,
+                0,
+                nullptr);
+        vkCmdDraw(frameinfo.cmdbuf, 3, 1, 0, 0);
     }
-
-    void TerrainRenderer::submit(const Transform& t, Device::FrameInfo frameinfo)
-    {
-
-    }
-
-    void TerrainRenderer::end(Device::FrameInfo frameinfo)
-    {
-
-    }
-
-    void TerrainRenderer::map(Buffer& buffer){}
 
 }

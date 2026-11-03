@@ -39,18 +39,19 @@ void PhysicsSystem::update(Ecs& ecs, float dt)
         auto& i = ecs.getComponent<Lumos::InputState>(ent);
         t.position.y += dy * dt;
         t.position.x += dx * dt;
+        // float pixelpwu = 640.0f / t.size.x;
+        // glm::vec2 renderpos = t.position;
+        // renderpos.x = std::round(t.position.x * pixelpwu) / pixelpwu;
+        // renderpos.y = std::round(t.position.y * pixelpwu) / pixelpwu;
         auto& c = ecs.getComponent<Lumos::Camera>(ent);
-        // t.position = snapToPixelGrid(t.position);
         auto proj = glm::ortho(t.position.x - t.size.x * 0.5f,
                       t.position.x + t.size.x * 0.5f,
                       t.position.y + t.size.y * 0.5f,
                       t.position.y - t.size.y * 0.5f,
                       0.0f,
                       1.0f);
-        // proj[1][1] *= -1;
         c.viewproj = proj * glm::translate(glm::mat4(1.0f), glm::vec3(-t.position, 0.0f));
         i.moved = true;
     }
-    // std::println("hello from physics system");
 }
 

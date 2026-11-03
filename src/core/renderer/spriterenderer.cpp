@@ -43,19 +43,34 @@ namespace Lumos
         };
         desc.pushconstantcount = 1;
         desc.pushconstantranges.push_back(pushconstant);
+        desc.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+        desc.polygonmode = VK_POLYGON_MODE_FILL;
+        desc.cullmode = VK_CULL_MODE_NONE;
+        desc.frontface = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+        desc.dstalphablendfactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+
         m_pipeline = GraphicsPipeline::create(device, desc);
         vkDestroyShaderModule(device.device(), shadermodule, nullptr);
-        m_image = std::make_unique<Image>(*m_device, 320,
-                            180,
-                            VK_FORMAT_R8G8B8A8_SRGB,
+        m_image = std::make_unique<Image>(*m_device, m_width,
+                            m_height,
+                            VK_FORMAT_B8G8R8A8_SRGB,
                             VK_IMAGE_TILING_OPTIMAL,
-                            VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                            VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
                             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        SamplerConfig config;
+        config.enableanisotropy = false;
+        config.filtermode = FilterMode::Nearest;
+        m_sampler = std::make_unique<Sampler>(*m_device, config);
+        // static_assert(offsetof(SpriteGPU, position) == 0);
+        // static_assert(offsetof(SpriteGPU, size) == 8);
+        // static_assert(offsetof(SpriteGPU, rotation) == 16);
+        // static_assert(offsetof(SpriteGPU, uvrect) == 16);
+        // static_assert(sizeof(SpriteGPU) == 32);
     }
 
     void SpriteRenderer::begin(Device::FrameInfo frameinfo, VkDescriptorSet globalset)
     {
-        m_device->transitionImageLayout(frameinfo.image,
+        m_device->transitionImageLayout(m_image->image(),
                               frameinfo.cmdbuf,
                               VK_IMAGE_LAYOUT_UNDEFINED,
                               VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL,
@@ -69,7 +84,7 @@ namespace Lumos
         // clearvalue.depthStencil = {1.0f, 0};
         VkRenderingAttachmentInfo attachmentinfo{};
         attachmentinfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
-        attachmentinfo.imageView = frameinfo.imageview;
+        attachmentinfo.imageView = m_image->imageview();
         attachmentinfo.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
         attachmentinfo.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         attachmentinfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -77,7 +92,7 @@ namespace Lumos
 
         VkRenderingInfoKHR renderinfo{};
         renderinfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR;
-        renderinfo.renderArea = {.offset = {0, 0}, .extent = frameinfo.extent};
+        renderinfo.renderArea = {.offset = {0, 0}, .extent = {m_width, m_height}};
         renderinfo.layerCount = 1;
         renderinfo.colorAttachmentCount = 1;
         renderinfo.pColorAttachments = &attachmentinfo;
@@ -87,8 +102,8 @@ namespace Lumos
         VkViewport viewport{};
         viewport.x = 0.0f;
         viewport.y = 0.0f;
-        viewport.width = static_cast<float>(frameinfo.extent.width);
-        viewport.height = static_cast<float>(frameinfo.extent.height);
+        viewport.width = static_cast<float>(m_width);
+        viewport.height = static_cast<float>(m_height);
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
 
@@ -97,7 +112,7 @@ namespace Lumos
 
         VkRect2D scissor{};
         scissor.offset = { 0, 0 };
-        scissor.extent = frameinfo.extent;
+        scissor.extent = {m_width, m_height};
 
         vkCmdSetScissor(frameinfo.cmdbuf, 0, 1, &scissor);
 
@@ -116,13 +131,14 @@ namespace Lumos
                                 nullptr);
     }
 
-    void SpriteRenderer::submit(const Transform& t, Device::FrameInfo frameinfo)
+    void SpriteRenderer::submit(const Transform& t, const Tile& tile, Device::FrameInfo frameinfo)
     {
 
         SpriteGPU s{};
         s.position = t.position;
         s.size = t.size;
         s.rotation = t.rotation;
+        s.uvrect = tile.uvrect;
         m_gpusprites.push_back(s);
     }
 
@@ -130,14 +146,14 @@ namespace Lumos
     {
         flush(frameinfo, frameinfo.cmdbuf);
         vkCmdEndRendering(frameinfo.cmdbuf);
-        m_device->transitionImageLayout(frameinfo.image,
+        m_device->transitionImageLayout(m_image->image(),
                               frameinfo.cmdbuf,
                               VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL,
-                              VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+                              VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
                               VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
-                              VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT,
+                              VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
                               VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
-                              {});
+                              VK_ACCESS_2_SHADER_SAMPLED_READ_BIT);
     }
 
     void SpriteRenderer::map(Buffer& buffer)
@@ -146,9 +162,18 @@ namespace Lumos
             return;
         }
         const VkDeviceSize bytes = m_gpusprites.size() * sizeof(SpriteGPU);
-        // std::println("bytes: {}", bytes);
         std::memcpy(buffer.map(), m_gpusprites.data(), bytes);
         buffer.unmap();
+    }
+
+    Image* SpriteRenderer::offscreenImage() const
+    {
+        return m_image.get();
+    }
+
+    Sampler* SpriteRenderer::offscreenSampler() const
+    {
+        return m_sampler.get();
     }
 
     //********PRIVATE*********//

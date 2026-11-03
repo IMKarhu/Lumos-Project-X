@@ -25,6 +25,7 @@ public:
     const std::vector<Tile>& tiles() const;
     Tile* tileAt(glm::ivec2 gridposition);
     const Tile* tileAt(glm::ivec2 gridposition) const;
+    glm::vec2 tileToWorld(int col, int row) const;
 private:
     uint32_t m_width = 0;
     uint32_t m_height = 0;

@@ -18,7 +18,9 @@ static const float2 quadUvs[6] = {
 
 struct Sprite {
     float2 position;
+    float2 padding;
     float2 size;
+    float4 uvrect;
     float rotation;
 };
 
@@ -58,7 +60,9 @@ VertexOutput vertMain(uint vertexID : SV_VertexID) {
                                     s * localposition.x + c * localposition.y);
     float2 worldposition = rotatedposition + sprite.position;
     output.position = mul(ubo.projview, float4(worldposition, 0.0, 1.0));
-    output.texcoord = quadUvs[quadvertex];
+    float2 uvmin = sprite.uvrect.xy;
+    float2 uvmax = sprite.uvrect.zw;
+    output.texcoord = lerp(uvmin, uvmax, quadUvs[quadvertex]);
     return output;
 }
 
@@ -66,11 +70,6 @@ VertexOutput vertMain(uint vertexID : SV_VertexID) {
 
 [shader("fragment")]
 float4 fragMain(VertexOutput inVert) : SV_TARGET {
-    float texwidth = 128.0f;
-    float texheight = 32.0f;
-    float spritew = 64.0f;
-    float spriteh = 32.0f;
-
     float2 texcoord = inVert.texcoord;
-    return texture.Sample(float2(((1 + inVert.texcoord.x) * spritew) / texwidth, (inVert.texcoord.y * spriteh) / texheight));
+    return texture.Sample(texcoord);
 }

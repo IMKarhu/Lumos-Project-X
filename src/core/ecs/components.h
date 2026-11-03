@@ -19,6 +19,7 @@ namespace Lumos
     //temporary struct for helping
     struct Tile
     {
+        glm::vec4 uvrect;
     };
 
     struct Id
