@@ -10,6 +10,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <array>
+#include <cstring>
 
 RenderSystem::RenderSystem(Lumos::Window& window)
 {
@@ -98,7 +99,7 @@ RenderSystem::RenderSystem(Lumos::Window& window)
         spritestorage.push_back(std::move(buf));
     }
     m_resourcemanager->cacheBuffers("sprite", spritestorage);
-    m_resourcemanager->createTexture("sprite", "../textures/testsprite.ktx2");
+    m_resourcemanager->createTexture("sprite", "../testjsons/testsprite.ktx2");
     // m_resourcemanager->createTexture("sprite", "../textures/witch_player_first.ktx2");
     m_resourcemanager->allocDescriptorSets("sprite", config.framesinflight);
     for (size_t i = 0; i < config.framesinflight; i++) {
@@ -135,6 +136,8 @@ RenderSystem::RenderSystem(Lumos::Window& window)
             .flags = Lumos::StageFlags::Fragment
         },
     };
+
+
     m_resourcemanager->createDescriptorLayout("presentation", spritebindings);
     m_resourcemanager->allocDescriptorSets("presentation", config.framesinflight);
     for (size_t i = 0; i < config.framesinflight; i++) {

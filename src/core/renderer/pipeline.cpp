@@ -2,6 +2,7 @@
 #include "errorcheck.h"
 #include "device.h"
 #include <fstream>
+#include <utility>
 
 namespace Lumos
 {

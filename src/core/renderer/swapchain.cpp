@@ -5,6 +5,7 @@
 
 #include <print>
 #include <algorithm>
+#include <utility>
 
 namespace Lumos
 {
@@ -17,6 +18,13 @@ namespace Lumos
         VkExtent2D extent = swapExtent(swapchainsupport.capabilities, window);
 
         uint32_t imagecount = swapchainsupport.capabilities.minImageCount + 1;
+        std::println("swapchain minImageCount: {}", swapchainsupport.capabilities.minImageCount);
+        std::println("swapchain maximagecount: {}", swapchainsupport.capabilities.maxImageCount);
+        std::println("image count: {}", imagecount);
+        //very much dirty fix to clamp image count to 2
+        if (imagecount > 2) {
+            imagecount = 2;
+        }
         if (swapchainsupport.capabilities.maxImageCount > 0
             && imagecount > swapchainsupport.capabilities.maxImageCount) {
             imagecount = swapchainsupport.capabilities.maxImageCount;
@@ -31,6 +39,7 @@ namespace Lumos
             .imageArrayLayers = 1,
             .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
         };
+        std::println("swapchain minImageCount {}", swapinfo.minImageCount);
 
         auto indices = m_device->findQueueFamilies(m_device->pdevice());
         uint32_t queuefamilyindices[] = {indices.graphicsFamily.value(), indices.presentFamily.value() };

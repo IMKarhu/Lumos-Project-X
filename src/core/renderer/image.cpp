@@ -2,6 +2,7 @@
 #include "device.h"
 #include "errorcheck.h"
 #include <cassert>
+#include <utility>
 
 namespace Lumos
 {

@@ -6,6 +6,8 @@
 #include "sampler.h"
 #include <array>
 #include <cassert>
+#include <utility>
+#include <print>
 
 namespace Lumos
 {
@@ -94,9 +96,12 @@ namespace Lumos
     {
         std::vector<VkDescriptorPoolSize> pools;
         for (auto& config : poolconfig) {
+            std::println("config type: {}", (int)typeHelper(config.type));
             VkDescriptorPoolSize ps{};
             ps.descriptorCount = config.count;
             ps.type = typeHelper(config.type);
+            std::println("config type: {}", (int)ps.type);
+
             pools.push_back(ps);
         }
 

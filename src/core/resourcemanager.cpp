@@ -7,6 +7,7 @@
 #include "ktx.h"
 #include <vulkan/vulkan.h>
 #include <cassert>
+#include <cstring>
 #include <print>
 
 namespace Lumos
