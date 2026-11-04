@@ -38,6 +38,11 @@ namespace Lumos
         ResourceManager(ResourceManager&&) noexcept = default;
         ResourceManager& operator=(ResourceManager&&) noexcept = default;
 
+        bool create(const std::string& name,
+                    std::span<const PoolConfig> poolconfig,
+                    std::span<const BindingConfig> bindings,
+                    uint32_t maxsets);
+
         bool cacheBuffers(const std::string& name, std::vector<Buffer*> buffers);
         Buffer* getBufferByNameAndIndex(const std::string& name, uint32_t index);
 

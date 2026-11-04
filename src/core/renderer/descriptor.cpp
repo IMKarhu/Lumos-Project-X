@@ -17,12 +17,16 @@ namespace Lumos
         {
         case Lumos::DescriptorType::Uniform:
             return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            break;
         case Lumos::DescriptorType::Storage:
             return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+            break;
         case Lumos::DescriptorType::CombinedImageSampler:
             return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            break;
         default:
             return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            break;
         }
     }
 

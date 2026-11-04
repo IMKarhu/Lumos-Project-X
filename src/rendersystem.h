@@ -26,7 +26,7 @@ private:
     std::unique_ptr<Lumos::RenderFactory> m_factory;
     std::unique_ptr<Lumos::RendererBase> m_spriterenderer;
     std::unique_ptr<Lumos::RendererBase> m_scenerenderer;
-    constexpr static std::size_t MAXSPRITES = 100000;
+    // constexpr static std::size_t MAXSPRITES = 1000;
 
     //testing camera stuff
     glm::vec2 m_position{0.0f};

@@ -17,6 +17,39 @@ namespace Lumos
     {
 
     }
+
+    /*
+     * Create pool, layout, allocate descriptor sets
+     */
+    bool ResourceManager::create(const std::string& name,
+                                 std::span<const PoolConfig> poolconfig,
+                                 std::span<const BindingConfig> bindings,
+                                 uint32_t maxsets)
+    {
+        //pool
+        auto exists = getPoolClassByName(name);
+        if (exists) {
+            return false;
+        }
+        auto pool = std::make_unique<DescriptorPool>(*m_device, poolconfig, maxsets);
+
+        //layout
+        auto layoutexists = getLayoutByName(name);
+        if (layoutexists) {
+            return false;
+        }
+        auto layout = std::make_unique<DescriptorLayout>(*m_device, bindings);
+
+
+        std::vector<VkDescriptorSetLayout> layouts(maxsets, layout->layout());
+        auto sets = pool->allocateDescriptorSets(layouts, maxsets);
+        auto [it, result] = m_descriptorsets.emplace(name, sets);
+
+
+        m_descriptorpools[name] = std::move(pool);
+        m_descriptorlayouts[name] = std::move(layout);
+        return result;
+    }
      
     /*
      * inserts elements into a unordered map where key is the name, and value is Buffer
@@ -111,7 +144,7 @@ namespace Lumos
     bool ResourceManager::allocDescriptorSets(const std::string& name, uint32_t size)
     {
         std::vector<VkDescriptorSetLayout> layouts(size, getLayoutByName(name));
-        auto* pool = getPoolClassByName(name);
+        auto pool = getPoolClassByName(name);
         auto sets = pool->allocateDescriptorSets(layouts, size);
         auto [it, result] = m_descriptorsets.emplace(name, sets);
         return result;
@@ -130,9 +163,7 @@ namespace Lumos
     {
         auto exists = getLayoutByName(name);
         if (exists) {
-            //early exit if layout already exists
             return;
-            // return exists;
         }
         auto layout = std::make_unique<DescriptorLayout>(*m_device, bindings);
         m_descriptorlayouts[name] = std::move(layout);
@@ -167,7 +198,7 @@ namespace Lumos
     DescriptorPool* ResourceManager::getPoolClassByName(const std::string& name)
     {
         auto it = m_descriptorpools.find(name);
-        if (it != m_descriptorpools.end()) {
+        if (it != nullptr) {
             return it->second.get();
         }
         return nullptr;

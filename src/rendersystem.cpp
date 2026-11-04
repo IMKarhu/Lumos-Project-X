@@ -23,14 +23,12 @@ RenderSystem::RenderSystem(Lumos::Window& window)
     m_factory = std::make_unique<Lumos::RenderFactory>();
 
     
-    const std::array globpools {
+    const std::array globpool {
         Lumos::PoolConfig {
             .count = config.framesinflight,
             .type = Lumos::DescriptorType::Uniform
         }
     };
-    m_resourcemanager->createDescriptorPool("global", globpools, config.framesinflight);
-
     const std::array globbindings {
         Lumos::BindingConfig {
             .binding = 0,
@@ -39,8 +37,6 @@ RenderSystem::RenderSystem(Lumos::Window& window)
             .flags = Lumos::StageFlags::Vertex
         }
     };
-    m_resourcemanager->createDescriptorLayout("global", globbindings);
-
     std::vector<Lumos::Buffer*> ubos;
     for (size_t i = 0; i < config.framesinflight; i++) {
         auto buf = new Lumos::Buffer(*m_device,
@@ -51,7 +47,7 @@ RenderSystem::RenderSystem(Lumos::Window& window)
         ubos.push_back(std::move(buf));
     }
     m_resourcemanager->cacheBuffers("global ubos", ubos);
-    m_resourcemanager->allocDescriptorSets("global", config.framesinflight);
+    m_resourcemanager->create("global", globpool, globbindings, config.framesinflight);
     for (size_t i = 0; i < config.framesinflight; i++) {
         Lumos::DescriptorWriter writer;
         writer.writeBuffer(0, *m_resourcemanager->getBufferByNameAndIndex("global ubos", i),
@@ -72,8 +68,6 @@ RenderSystem::RenderSystem(Lumos::Window& window)
             .type = Lumos::DescriptorType::Storage
         },
     };
-    m_resourcemanager->createDescriptorPool("sprite", spritepool, config.framesinflight);
-
     const std::array spritebindings {
         Lumos::BindingConfig {
             .binding = 0,
@@ -88,12 +82,10 @@ RenderSystem::RenderSystem(Lumos::Window& window)
             .flags = Lumos::StageFlags::Vertex
         }
     };
-    m_resourcemanager->createDescriptorLayout("sprite", spritebindings);
-
     std::vector<Lumos::Buffer*> spritestorage;
     for (size_t i = 0; i < config.framesinflight; i++) {
         auto buf = new Lumos::Buffer(*m_device,
-                MAXSPRITES * sizeof(Lumos::SpriteRenderer::SpriteGPU),
+                sizeof(Lumos::SpriteRenderer::SpriteGPU),
                 VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
         spritestorage.push_back(std::move(buf));
@@ -101,13 +93,14 @@ RenderSystem::RenderSystem(Lumos::Window& window)
     m_resourcemanager->cacheBuffers("sprite", spritestorage);
     m_resourcemanager->createTexture("sprite", "../testjsons/testsprite.ktx2");
     // m_resourcemanager->createTexture("sprite", "../textures/witch_player_first.ktx2");
-    m_resourcemanager->allocDescriptorSets("sprite", config.framesinflight);
+    std::println("before sprite alloc");
+    m_resourcemanager->create("sprite", spritepool, spritebindings, config.framesinflight);
     for (size_t i = 0; i < config.framesinflight; i++) {
         Lumos::DescriptorWriter writer;
         Lumos::Texture& tex = *m_resourcemanager->getTextureByName("sprite");
         writer.writeImage(0, tex.image(), tex.sampler());
         writer.writeBuffer(1, *m_resourcemanager->getBufferByNameAndIndex("sprite", i),
-                MAXSPRITES * sizeof(Lumos::SpriteRenderer::SpriteGPU),
+                sizeof(Lumos::SpriteRenderer::SpriteGPU),
                 Lumos::DescriptorWriter::STORAGE);
         writer.update(*m_device, m_resourcemanager->getSetByNameAndIndex("sprite", i));
     }
@@ -126,8 +119,6 @@ RenderSystem::RenderSystem(Lumos::Window& window)
             .type = Lumos::DescriptorType::CombinedImageSampler
         },
     };
-    m_resourcemanager->createDescriptorPool("presentation", presentationpool, config.framesinflight);
-
     const std::array presentationbindings {
         Lumos::BindingConfig {
             .binding = 0,
@@ -136,10 +127,8 @@ RenderSystem::RenderSystem(Lumos::Window& window)
             .flags = Lumos::StageFlags::Fragment
         },
     };
-
-
-    m_resourcemanager->createDescriptorLayout("presentation", spritebindings);
-    m_resourcemanager->allocDescriptorSets("presentation", config.framesinflight);
+    m_resourcemanager->create("presentation", presentationpool, presentationbindings, config.framesinflight);
+    std::println("before presentation alloc");
     for (size_t i = 0; i < config.framesinflight; i++) {
         Lumos::DescriptorWriter writer;
         auto img = m_spriterenderer->offscreenImage();
