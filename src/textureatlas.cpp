@@ -23,3 +23,13 @@ glm::vec4 TextureAtlas::uvRect(const std::string& name) const
     glm::vec2 uvmax = glm::vec2(region.position + region.size) / glm::vec2(m_atlassize);
     return {uvmin, uvmax};
 }
+
+const std::filesystem::path& TextureAtlas::texturePath() const
+{
+    return m_texturepath;
+}
+
+void TextureAtlas::setTexturePath(std::filesystem::path texturepath)
+{
+    m_texturepath = std::move(texturepath);
+}

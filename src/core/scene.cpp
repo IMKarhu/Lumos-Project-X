@@ -12,4 +12,9 @@ namespace Lumos
     {
         return m_ecs;
     }
+
+    GameState Scene::gamestate() const
+    {
+        return m_gamestate;
+    }
 } //namespace Lumos

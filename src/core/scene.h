@@ -28,9 +28,10 @@ namespace Lumos
     public:
         Scene(const std::string_view name = "scene");
         [[nodiscard]] Ecs& ecs();
+        [[nodiscard]] GameState gamestate() const;
     private:
         Ecs m_ecs;
         std::string m_name;
-        GameState type;
+        GameState m_gamestate;
     };
 } //namespace Lumos

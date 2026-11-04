@@ -14,27 +14,19 @@ class Ecs;
 class RenderSystem
 {
 public:
-    RenderSystem(Lumos::Window& window);
+    RenderSystem(Lumos::Window& window, Lumos::VulkanConfig config);
     ~RenderSystem();
-    void update(Ecs& ecs, float dt);
+    void createRenderers(Lumos::ResourceManager& manager, Lumos::VulkanConfig config);
+    void update(Ecs& ecs, Lumos::ResourceManager& manager, float dt);
     void waitForDestroy();
+    Lumos::Device* device()const;
     glm::vec2 snapToPixelGrid(glm::vec2 position);
 
 private:
     std::unique_ptr<Lumos::Device> m_device;
-    std::unique_ptr<Lumos::ResourceManager> m_resourcemanager;
+    // std::unique_ptr<Lumos::ResourceManager> m_resourcemanager;
     std::unique_ptr<Lumos::RenderFactory> m_factory;
     std::unique_ptr<Lumos::RendererBase> m_spriterenderer;
     std::unique_ptr<Lumos::RendererBase> m_scenerenderer;
     // constexpr static std::size_t MAXSPRITES = 1000;
-
-    //testing camera stuff
-    glm::vec2 m_position{0.0f};
-    glm::vec2 m_size{10.0f, 10.0f};
-
-    struct UniformBuffer
-    {
-        glm::mat4 projectionview = glm::mat4(1);
-        // bool changed = false;
-    } m_uniformbuffer;
 };

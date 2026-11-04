@@ -23,9 +23,9 @@ endif()
 
 add_subdirectory(glm)
 
-set(BUILD_SHARED_LIBS OFF)
-set(KTX_FEATURE_TOOLS OFF CACHE BOOL "Build KTX tools" FORCE)
+set(BUILD_SHARED_LIBS ON)
+set(KTX_FEATURE_TOOLS ON CACHE BOOL "Build KTX tools" FORCE)
 set(KTX_FEATURE_DOC OFF CACHE BOOL "Build KTX documentation" FORCE)
 set(KTX_FEATURE_TESTS OFF CACHE BOOL "Build KTX tests" FORCE)
 add_subdirectory(KTX-Software/lib ktx)
-unset(BUILD_SHARED_LIBS)
+# unset(BUILD_SHARED_LIBS)

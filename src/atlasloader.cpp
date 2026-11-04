@@ -16,6 +16,9 @@ TextureAtlas AtlasLoader::load(std::filesystem::path filepath)
 
     TextureAtlas atlas({ size.at(0).get<int>(), size.at(1).get<int>() });
 
+    auto path = json.at("texture").get<std::string>();
+    atlas.setTexturePath(filepath.parent_path() / path);
+
     for (const auto& [name, region] : json.at("regions").items()) {
         auto position = region.at("position");
         auto dimensions = region.at("size");
