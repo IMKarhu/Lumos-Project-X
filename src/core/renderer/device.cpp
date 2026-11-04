@@ -7,6 +7,7 @@
 #include "errorcheck.h"
 
 #include <stdexcept>
+#include <cstring>
 #include <set>
 
 namespace Lumos
@@ -135,17 +136,18 @@ namespace Lumos
         m_swapchain = std::make_unique<SwapChain>(*this, window);
 
         //sync stuff
-        m_finishedSemaphores.resize(m_maxframesinflight);
-        m_presentSemaphores.resize(m_maxframesinflight);
-        m_fences.resize(m_maxframesinflight);
+        m_finishedSemaphores.resize(m_swapchain->images().size());
+        m_presentSemaphores.resize(m_swapchain->images().size());
+        m_fences.resize(m_swapchain->images().size());
         
         VkSemaphoreCreateInfo semaphoreinfo{};
         semaphoreinfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
         VkFenceCreateInfo fenceinfo{};
         fenceinfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
         fenceinfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+        std::println("size of images: {}",m_swapchain->images().size()); 
 
-        for (size_t i = 0; i < m_maxframesinflight; i++) {
+        for (size_t i = 0; i < m_swapchain->images().size(); i++) {
             VK_CHECK(vkCreateSemaphore(m_device, &semaphoreinfo, nullptr, &m_finishedSemaphores[i]));
             VK_CHECK(vkCreateSemaphore(m_device, &semaphoreinfo, nullptr, &m_presentSemaphores[i]));
             VK_CHECK(vkCreateFence(m_device, &fenceinfo, nullptr, &m_fences[i]));
@@ -242,6 +244,7 @@ namespace Lumos
             throw std::runtime_error("failed to present swapchain image");
         }
         frameindex = (frameindex + 1) % m_maxframesinflight;
+        // std::println("frameindex: {}", frameindex);
     }
 
     void Device::waitForDestroy()
