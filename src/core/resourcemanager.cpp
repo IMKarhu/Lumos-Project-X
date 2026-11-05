@@ -62,7 +62,7 @@ namespace Lumos
         return result;
     }
 
-    Buffer* ResourceManager::getBufferByNameAndIndex(const std::string& name, uint32_t index)
+    Buffer* ResourceManager::getBufferByNameAndIndex(const std::string& name, uint32_t index) const
     {
         auto it = m_buffers.find(name);
         if (it != m_buffers.end()) {
@@ -71,6 +71,28 @@ namespace Lumos
         // std::println("returning null");
         // just returning nullptr isnt really ideal. because whenever buffer is then used application may crash.
         return nullptr;
+    }
+
+    std::vector<Buffer*> ResourceManager::createBuffer(const std::string& name, void* size, void* data, VkBufferUsageFlags type) const
+    {
+        VkDeviceSize buffersize = (VkDeviceSize)size;
+        std::vector<Buffer*> buffers;
+
+        Buffer stagingbuffer(*m_device,
+                             buffersize,
+                             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        std::memcpy(stagingbuffer.map(), data, buffersize);
+        stagingbuffer.unmap();
+
+        Buffer* buffer = new Buffer(*m_device,
+                       buffersize,
+                       VK_BUFFER_USAGE_TRANSFER_DST_BIT | type,
+                       VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        m_device->copyBuffers(stagingbuffer, *buffer, buffersize);
+        buffers.push_back(buffer);
+        // m_buffers[name] = buffers;
+        return buffers;
     }
 
     bool ResourceManager::createTexture(const std::string& name, std::filesystem::path filepath)

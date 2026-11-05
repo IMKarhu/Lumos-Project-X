@@ -1,13 +1,16 @@
 #include "application.h"
+#include "ecs/components.h"
 #include "resourcemanager.h"
 #include "renderer/texture.h"
 #include "renderer/buffer.h"
+#include "defaulttypes.h"
 
 #include "textureatlas.h"
 #include "atlasloader.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <chrono>
 #include <format>
+#include <stdexcept>
 
 Application::Application()
 {
@@ -42,6 +45,8 @@ Application::Application()
 
     Lumos::InputState inputstate;
     inputstate.moved = true;
+    Lumos::Size indexsize;
+    indexsize.size = static_cast<uint32_t>(DefaultTypes::DefaultCube::indices.size());
     ecs.addComponent(player, trans);
     ecs.addComponent(player, camera);
     ecs.addComponent(player, inputstate);
@@ -141,52 +146,74 @@ void Application::initializeResources()
                 Lumos::DescriptorWriter::UNIFORM);
         writer.update(*m_rendersystem->device(), m_resourcemanager->getSetByNameAndIndex("global", i));
     }
+    // bool ResourceManager::createBuffer(const std::string& name, void* size, void* data, VkBufferUsageFlags type)
+
+    VkDeviceSize size = sizeof(DefaultTypes::DefaultCube::vertices[0]) * DefaultTypes::DefaultCube::vertices.size();
+    auto buffers = m_resourcemanager->createBuffer("cubevertex",
+                                                  (void*)size,
+                                                  (void*)DefaultTypes::DefaultCube::vertices.data(),
+                                                  VK_BUFFER_USAGE_VERTEX_BUFFER_BIT); 
+    if (buffers.empty()) {
+        throw std::runtime_error("failed to create a vertex buffer and vector is empty");
+    }
+    m_resourcemanager->cacheBuffers("cubevertex", buffers);
+
+    size = sizeof(DefaultTypes::DefaultCube::indices[0]) * DefaultTypes::DefaultCube::indices.size();
+    buffers = m_resourcemanager->createBuffer("cubeindex",
+                                                  (void*)size,
+                                                  (void*)DefaultTypes::DefaultCube::indices.data(),
+                                                  VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+    if (buffers.empty()) {
+        throw std::runtime_error("failed to create a index buffer and vector is empty");
+    }
+    m_resourcemanager->cacheBuffers("cubeindex", buffers);
+
 
     //sprite
-    const std::array spritepool {
-        Lumos::PoolConfig {
-            .count = m_vkconfig.framesinflight,
-            .type = Lumos::DescriptorType::CombinedImageSampler
-        },
-            Lumos::PoolConfig {
-            .count = m_vkconfig.framesinflight,
-            .type = Lumos::DescriptorType::Storage
-        },
-    };
-    const std::array spritebindings {
-        Lumos::BindingConfig {
-            .binding = 0,
-            .type = Lumos::DescriptorType::CombinedImageSampler,
-            .count = 1,
-            .flags = Lumos::StageFlags::Fragment
-        },
-        Lumos::BindingConfig {
-            .binding = 1,
-            .type = Lumos::DescriptorType::Storage,
-            .count = 1,
-            .flags = Lumos::StageFlags::Vertex
-        }
-    };
-    std::vector<Lumos::Buffer*> spritestorage;
-    for (size_t i = 0; i < m_vkconfig.framesinflight; i++) {
-        auto buf = new Lumos::Buffer(*m_rendersystem->device(),
-                sizeof(Lumos::SpriteRenderer::SpriteGPU),
-                VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-        spritestorage.push_back(std::move(buf));
-    }
-    m_resourcemanager->cacheBuffers("sprite", spritestorage);
-    m_resourcemanager->createTexture("sprite", "../testjsons/testsprite.ktx2");
-    m_resourcemanager->create("sprite", spritepool, spritebindings, m_vkconfig.framesinflight);
-    for (size_t i = 0; i < m_vkconfig.framesinflight; i++) {
-        Lumos::DescriptorWriter writer;
-        Lumos::Texture& tex = *m_resourcemanager->getTextureByName("sprite");
-        writer.writeImage(0, tex.image(), tex.sampler());
-        writer.writeBuffer(1, *m_resourcemanager->getBufferByNameAndIndex("sprite", i),
-                sizeof(Lumos::SpriteRenderer::SpriteGPU),
-                Lumos::DescriptorWriter::STORAGE);
-        writer.update(*m_rendersystem->device(), m_resourcemanager->getSetByNameAndIndex("sprite", i));
-    }
+    // const std::array spritepool {
+    //     Lumos::PoolConfig {
+    //         .count = m_vkconfig.framesinflight,
+    //         .type = Lumos::DescriptorType::CombinedImageSampler
+    //     },
+    //         Lumos::PoolConfig {
+    //         .count = m_vkconfig.framesinflight,
+    //         .type = Lumos::DescriptorType::Storage
+    //     },
+    // };
+    // const std::array spritebindings {
+    //     Lumos::BindingConfig {
+    //         .binding = 0,
+    //         .type = Lumos::DescriptorType::CombinedImageSampler,
+    //         .count = 1,
+    //         .flags = Lumos::StageFlags::Fragment
+    //     },
+    //     Lumos::BindingConfig {
+    //         .binding = 1,
+    //         .type = Lumos::DescriptorType::Storage,
+    //         .count = 1,
+    //         .flags = Lumos::StageFlags::Vertex
+    //     }
+    // };
+    // std::vector<Lumos::Buffer*> spritestorage;
+    // for (size_t i = 0; i < m_vkconfig.framesinflight; i++) {
+    //     auto buf = new Lumos::Buffer(*m_rendersystem->device(),
+    //             sizeof(Lumos::SpriteRenderer::SpriteGPU),
+    //             VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+    //             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    //     spritestorage.push_back(std::move(buf));
+    // }
+    // m_resourcemanager->cacheBuffers("sprite", spritestorage);
+    // m_resourcemanager->createTexture("sprite", "../testjsons/testsprite.ktx2");
+    // m_resourcemanager->create("sprite", spritepool, spritebindings, m_vkconfig.framesinflight);
+    // for (size_t i = 0; i < m_vkconfig.framesinflight; i++) {
+    //     Lumos::DescriptorWriter writer;
+    //     Lumos::Texture& tex = *m_resourcemanager->getTextureByName("sprite");
+    //     writer.writeImage(0, tex.image(), tex.sampler());
+    //     writer.writeBuffer(1, *m_resourcemanager->getBufferByNameAndIndex("sprite", i),
+    //             sizeof(Lumos::SpriteRenderer::SpriteGPU),
+    //             Lumos::DescriptorWriter::STORAGE);
+    //     writer.update(*m_rendersystem->device(), m_resourcemanager->getSetByNameAndIndex("sprite", i));
+    // }
 
 
     //presentation stuff

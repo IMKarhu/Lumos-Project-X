@@ -44,7 +44,8 @@ namespace Lumos
                     uint32_t maxsets);
 
         bool cacheBuffers(const std::string& name, std::vector<Buffer*> buffers);
-        Buffer* getBufferByNameAndIndex(const std::string& name, uint32_t index);
+        Buffer* getBufferByNameAndIndex(const std::string& name, uint32_t index) const;
+        std::vector<Buffer*> createBuffer(const std::string& name, void* size, void* data, VkBufferUsageFlags type) const;
 
         bool createTexture(const std::string& name, std::filesystem::path filepath);
         Texture* getTextureByName(const std::string& name);

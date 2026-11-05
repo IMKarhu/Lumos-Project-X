@@ -32,6 +32,8 @@ add_library(core
     renderer/spriterenderer.cpp
     renderer/scenerenderer.h
     renderer/scenerenderer.cpp
+    renderer/3drenderer.h
+    renderer/3drenderer.cpp
     renderer/vertex.h
     renderer/baserenderer.h
     ecs/componentpool.h
@@ -117,5 +119,7 @@ add_slang_shader_target(compile_shaders
     SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/renderer/shaders/sprite.slang
     ${CMAKE_CURRENT_SOURCE_DIR}/renderer/shaders/presentation.slang
+    ${CMAKE_CURRENT_SOURCE_DIR}/renderer/shaders/cube.slang
+
 )
 add_dependencies(core compile_shaders)

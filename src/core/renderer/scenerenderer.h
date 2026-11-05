@@ -35,8 +35,8 @@ namespace Lumos
         ~SceneRenderer() override = default;
 
         void begin(Device::FrameInfo frameinfo, VkDescriptorSet globalset) override;
-        void submit(const Transform& t, const Tile& tile, Device::FrameInfo frameinfo) override;
-        void end(Device::FrameInfo frameinfo) override;
+        void submit(const Transform& t, uint32_t size, Device::FrameInfo frameinfo) override;
+        void end(Device::FrameInfo frameinfo, const ResourceManager& manager) override;
         void map(Buffer& buffer) override;
 
         //not used in presentation
@@ -46,6 +46,6 @@ namespace Lumos
     private:
         Device* m_device = nullptr;
         GraphicsPipeline m_pipeline;
-        void flush(Device::FrameInfo frameinfo);
+        void flush(Device::FrameInfo frameinfo, const ResourceManager& manager);
     };
 } //namespace Lumos

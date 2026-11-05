@@ -22,6 +22,11 @@ namespace Lumos
         glm::vec4 uvrect;
     };
 
+    struct Size
+    {
+        uint32_t size;
+    };
+
     struct Id
     {
         std::string name;

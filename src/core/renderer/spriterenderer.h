@@ -50,8 +50,8 @@ namespace Lumos
         ~SpriteRenderer() override = default;
 
         void begin(Device::FrameInfo frameinfo, VkDescriptorSet globalset) override;
-        void submit(const Transform& t, const Tile& tile, Device::FrameInfo frameinfo) override;
-        void end(Device::FrameInfo frameinfo) override;
+        void submit(const Transform& t, uint32_t size, Device::FrameInfo frameinfo) override;
+        void end(Device::FrameInfo frameinfo, const ResourceManager& manager) override;
         void map(Buffer& buffer) override;
         Image* offscreenImage() const override;
         Sampler* offscreenSampler() const override;
@@ -69,6 +69,6 @@ namespace Lumos
             glm::mat4 model;
         };
 
-        void flush(Device::FrameInfo frameinfo, VkCommandBuffer cmdbuf);
+        void flush(Device::FrameInfo frameinfo, const ResourceManager& manager);
     };
 } //namespace Lumos

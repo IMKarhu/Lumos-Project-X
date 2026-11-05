@@ -1,6 +1,7 @@
 #include "spriterenderer.h"
 #include "buffer.h"
 #include "descriptor.h"
+#include "resourcemanager.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <print>
@@ -132,20 +133,20 @@ namespace Lumos
                                 nullptr);
     }
 
-    void SpriteRenderer::submit(const Transform& t, const Tile& tile, Device::FrameInfo frameinfo)
+    void SpriteRenderer::submit(const Transform& t, uint32_t size, Device::FrameInfo frameinfo)
     {
 
         SpriteGPU s{};
         s.position = t.position;
         s.size = t.size;
         s.rotation = t.rotation;
-        s.uvrect = tile.uvrect;
+        // s.uvrect = tile.uvrect;
         m_gpusprites.push_back(s);
     }
 
-    void SpriteRenderer::end(Device::FrameInfo frameinfo)
+    void SpriteRenderer::end(Device::FrameInfo frameinfo, const ResourceManager& manager)
     {
-        flush(frameinfo, frameinfo.cmdbuf);
+        flush(frameinfo, manager);
         vkCmdEndRendering(frameinfo.cmdbuf);
         m_device->transitionImageLayout(m_image->image(),
                               frameinfo.cmdbuf,
@@ -179,12 +180,12 @@ namespace Lumos
 
     //********PRIVATE*********//
    
-    void SpriteRenderer::flush(Device::FrameInfo frameinfo, VkCommandBuffer cmdbuf)
+    void SpriteRenderer::flush(Device::FrameInfo frameinfo, const ResourceManager& manager)
     {
         if (m_gpusprites.empty()) {
             return;
         }
-        vkCmdBindDescriptorSets(cmdbuf,
+        vkCmdBindDescriptorSets(frameinfo.cmdbuf,
                 VK_PIPELINE_BIND_POINT_GRAPHICS,
                 m_pipeline.layout(),
                 1,
@@ -198,14 +199,14 @@ namespace Lumos
         // transform = glm::rotate(transform, sprite.rotation, glm::vec3(0.0f, 0.0f, 1.0f));
         // transform = glm::scale(transform, glm::vec3(sprite.size, 0.0f));
         pushconstant.model = transform;
-        vkCmdPushConstants(cmdbuf,
+        vkCmdPushConstants(frameinfo.cmdbuf,
                 m_pipeline.layout(),
                 VK_SHADER_STAGE_VERTEX_BIT,
                 0,
                 sizeof(PushConstant),
                 &pushconstant);
 
-        vkCmdDraw(cmdbuf, static_cast<uint32_t>(m_gpusprites.size()) * 6, 1, 0, 0);
+        vkCmdDraw(frameinfo.cmdbuf, static_cast<uint32_t>(m_gpusprites.size()) * 6, 1, 0, 0);
         m_gpusprites.clear();
     }
 }

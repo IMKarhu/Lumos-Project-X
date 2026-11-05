@@ -12,6 +12,7 @@ add_executable(game
     textureatlas.cpp
     atlasloader.h
     atlasloader.cpp
+    defaulttypes.h
 )
 
 set_property(TARGET game PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/buildvs")

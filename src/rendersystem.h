@@ -24,9 +24,9 @@ public:
 
 private:
     std::unique_ptr<Lumos::Device> m_device;
-    // std::unique_ptr<Lumos::ResourceManager> m_resourcemanager;
     std::unique_ptr<Lumos::RenderFactory> m_factory;
     std::unique_ptr<Lumos::RendererBase> m_spriterenderer;
+    std::unique_ptr<Lumos::DRenderer> m_cuberenderer;
     std::unique_ptr<Lumos::RendererBase> m_scenerenderer;
     // constexpr static std::size_t MAXSPRITES = 1000;
 };

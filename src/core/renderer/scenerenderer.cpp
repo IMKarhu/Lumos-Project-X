@@ -1,4 +1,5 @@
 #include "scenerenderer.h"
+#include "resourcemanager.h"
 
 
 namespace Lumos
@@ -32,10 +33,9 @@ namespace Lumos
         desc.pushconstantcount = 0;
         desc.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
         desc.polygonmode = VK_POLYGON_MODE_FILL;
-        desc.cullmode = VK_CULL_MODE_NONE;
-        desc.frontface = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-        desc.dstalphablendfactor = VK_BLEND_FACTOR_ZERO; 
-
+        desc.cullmode = VK_CULL_MODE_BACK_BIT;
+        desc.frontface = VK_FRONT_FACE_CLOCKWISE;
+        desc.dstalphablendfactor = VK_BLEND_FACTOR_ZERO;
         m_pipeline = GraphicsPipeline::create(device, desc);
         vkDestroyShaderModule(device.device(), shadermodule, nullptr);
     }
@@ -97,11 +97,11 @@ namespace Lumos
     /*
      * we don't actually need to submit anything in scene rendering
     */
-    void SceneRenderer::submit(const Transform& t, const Tile& tile, Device::FrameInfo frameinfo) {}
+    void SceneRenderer::submit(const Transform& t, uint32_t size, Device::FrameInfo frameinfo) {}
 
-    void SceneRenderer::end(Device::FrameInfo frameinfo)
+    void SceneRenderer::end(Device::FrameInfo frameinfo, const ResourceManager& manager)
     {
-        flush(frameinfo);
+        flush(frameinfo, manager);
         vkCmdEndRendering(frameinfo.cmdbuf);
         m_device->transitionImageLayout(frameinfo.image,
                               frameinfo.cmdbuf,
@@ -122,7 +122,7 @@ namespace Lumos
     /**********PRIVATE**********/
     
 
-    void SceneRenderer::flush(Device::FrameInfo frameinfo)
+    void SceneRenderer::flush(Device::FrameInfo frameinfo, const ResourceManager& manager)
     {
         vkCmdBindDescriptorSets(frameinfo.cmdbuf,
                 VK_PIPELINE_BIND_POINT_GRAPHICS,
