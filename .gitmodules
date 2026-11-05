@@ -4,6 +4,3 @@
 [submodule "ext/KTX-Software"]
 	path = ext/KTX-Software
 	url = https://github.com/KhronosGroup/KTX-Software.git
-[submodule "ext/glfw"]
-	path = ext/glfw
-	url = https://github.com/glfw/glfw.git
