@@ -15,7 +15,7 @@ Application::Application()
     m_window = std::make_unique<Lumos::Window>(1280, 720, "test");
     m_window->setUserPtr(&m_eventbus);
     m_rendersystem = std::make_unique<RenderSystem>(*m_window, m_vkconfig);
-    m_physicssystem = std::make_unique<PhysicsSystem>(m_eventbus);
+    m_movementsystem = std::make_unique<MovementSystem>(m_eventbus);
     m_resourcemanager = std::make_unique<Lumos::ResourceManager>(*m_rendersystem->device());
 
     m_eventbus.subscribe<Lumos::KeyPressEvent>([&](const Lumos::KeyPressEvent& e) {
@@ -44,12 +44,8 @@ Application::Application()
             camera.near, camera.far);
     proj[1][1] *= -1;
     camubo.viewproj = proj * view;
-
-    Lumos::InputState inputstate;
-    inputstate.moved = true;
     ecs.addComponent(player, trans);
     ecs.addComponent(player, camera);
-    ecs.addComponent(player, inputstate);
     ecs.addComponent(player, camubo);
     for (size_t i = 0; i < 10; i++) {
         Entity ent = ecs.createEntity("cube");
@@ -95,7 +91,7 @@ void Application::run()
             framecount = 0.0f;
             timeaccumulator = 0.0f;
         }
-        m_physicssystem->update(m_scene.ecs(), dt);
+        m_movementsystem->update(m_scene.ecs(), dt);
         m_rendersystem->update(m_scene.ecs(), *m_resourcemanager, dt);
     }
     m_rendersystem->waitForDestroy();

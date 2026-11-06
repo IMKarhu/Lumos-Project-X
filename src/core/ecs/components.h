@@ -25,12 +25,6 @@ namespace Lumos
         glm::mat4 viewproj = glm::mat4(1.0f);
     };
 
-    //temporary struct for helping
-    struct Tile
-    {
-        glm::vec4 uvrect;
-    };
-
     struct Model
     {
         glm::mat4 model = glm::mat4(1.0f);
@@ -45,10 +39,5 @@ namespace Lumos
     {
         std::string name;
         uint32_t id;
-    };
-
-    struct InputState
-    {
-        bool moved = false;
     };
 }// namespace Lumos

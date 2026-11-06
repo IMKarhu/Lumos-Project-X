@@ -30,6 +30,7 @@ namespace Lumos
         // glfwSetWindowUserPointer(m_window, &m_windowdata);
         glfwSetFramebufferSizeCallback(m_window, framebufferCallback);
         glfwSetKeyCallback(m_window, keyCallback);
+        glfwSetCursorPosCallback(m_window, cursorCallback);
 
     }
 
@@ -60,6 +61,7 @@ namespace Lumos
         // glfwSetWindowUserPointer(m_window, &m_windowdata);
         glfwSetFramebufferSizeCallback(m_window, framebufferCallback);
         glfwSetKeyCallback(m_window, keyCallback);
+        glfwSetCursorPosCallback(m_window, cursorCallback);
     }
 
     Window::~Window()
@@ -156,6 +158,7 @@ namespace Lumos
         // glfwSetWindowUserPointer(m_window, &m_windowdata);
         glfwSetFramebufferSizeCallback(m_window, framebufferCallback);
         glfwSetKeyCallback(m_window, keyCallback);
+        glfwSetCursorPosCallback(m_window, cursorCallback);
     }
 
     void Window::framebufferCallback(GLFWwindow *window, int width, int height)
@@ -175,6 +178,17 @@ namespace Lumos
             event.action = action;
             event.mods = mods;
             eventbus->publish(event);
+        }
+    }
+
+    void Window::cursorCallback(GLFWwindow* window, double xpos, double ypos)
+    {
+        auto* eventbus = static_cast<EventBus*>(glfwGetWindowUserPointer(window));
+        if (eventbus) {
+            // std::println("moving in window");
+            CursorMoveEvent event;
+            event.x = xpos;
+            event.y = ypos;
         }
     }
 }// namespace Lumos

@@ -74,6 +74,16 @@ namespace Lumos
         bool m_framebufferresized = false;
     };
 
+    struct CursorMoveEvent : public Event
+    {
+        double x;
+        double y;
+        void dispatch(EventBus& bus) const override
+        {
+            bus.publish(*this);
+        }
+    };
+
     class EventQueue
     {
     public:

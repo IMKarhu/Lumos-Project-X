@@ -4,7 +4,7 @@
 #include "scene.h"
 #include "resourcemanager.h"
 #include "rendersystem.h"
-#include "physicssystem.h"
+#include "movementsystem.h"
 #include "tilemap.h"
 #include <memory>
 
@@ -18,7 +18,7 @@ public:
 private:
     std::unique_ptr<Lumos::Window> m_window;
     std::unique_ptr<RenderSystem> m_rendersystem;
-    std::unique_ptr<PhysicsSystem> m_physicssystem;
+    std::unique_ptr<MovementSystem> m_movementsystem;
     std::unique_ptr<Lumos::ResourceManager> m_resourcemanager;
     Lumos::EventBus m_eventbus;
     Lumos::EventQueue m_eventqueue;

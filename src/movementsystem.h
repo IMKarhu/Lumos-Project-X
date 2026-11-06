@@ -7,11 +7,11 @@ namespace Lumos
     class EventBus;
 }
 
-class PhysicsSystem
+class MovementSystem
 {
 public:
-    PhysicsSystem(Lumos::EventBus& eventbus);
-    ~PhysicsSystem();
+    MovementSystem(Lumos::EventBus& eventbus);
+    ~MovementSystem();
     void update(Ecs& ecs, float dt);
 private:
     std::unordered_set<int> m_heldkeys;

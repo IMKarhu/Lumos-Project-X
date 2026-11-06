@@ -4,8 +4,8 @@ add_executable(game
     application.h
     rendersystem.h
     rendersystem.cpp
-    physicssystem.h
-    physicssystem.cpp
+    movementsystem.h
+    movementsystem.cpp
     tilemap.h
     tilemap.cpp
     textureatlas.h
