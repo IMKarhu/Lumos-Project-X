@@ -28,12 +28,12 @@ add_library(core
     renderer/texture.cpp
     renderer/descriptor.h
     renderer/descriptor.cpp
-    renderer/spriterenderer.h
-    renderer/spriterenderer.cpp
-    renderer/scenerenderer.h
-    renderer/scenerenderer.cpp
-    renderer/3drenderer.h
-    renderer/3drenderer.cpp
+    # renderer/spriterenderer.h
+    # renderer/spriterenderer.cpp
+    # renderer/scenerenderer.h
+    # renderer/scenerenderer.cpp
+    # renderer/3drenderer.h
+    # renderer/3drenderer.cpp
     renderer/vertex.h
     renderer/baserenderer.h
     ecs/componentpool.h

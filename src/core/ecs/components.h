@@ -13,6 +13,15 @@ namespace Lumos
 
     struct Camera
     {
+        glm::vec3 up = glm::vec3(0.0f, 0.0f, 1.0f);
+        glm::vec3 forward = glm::vec3(0.0f, 0.0f, -1.0f);
+        float fov;
+        float near;
+        float far;
+    };
+
+    struct CameraUBO
+    {
         glm::mat4 viewproj = glm::mat4(1.0f);
     };
 

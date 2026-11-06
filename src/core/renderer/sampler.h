@@ -17,6 +17,7 @@ namespace Lumos
     class Sampler
     {
         public:
+        Sampler() = default;
         Sampler(Device& device, SamplerConfig config);
 
         ~Sampler();

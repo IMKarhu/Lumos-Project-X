@@ -155,7 +155,51 @@ namespace Lumos
         return result;
     }
 
-    Texture* ResourceManager::getTextureByName(const std::string& name)
+    bool ResourceManager::createTextureImage(const std::string& name, uint32_t width, uint32_t height, VkFormat format)
+    {
+// VK_FORMAT_R8G8B8A8_SRGB
+        Image image = Image(*m_device,
+                width, height, format,
+                VK_IMAGE_TILING_OPTIMAL,
+                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                VK_IMAGE_ASPECT_COLOR_BIT);
+
+        SamplerConfig config{
+            .filtermode = FilterMode::Linear,
+            .enableanisotropy = true
+        };
+        Sampler sampler = Sampler(*m_device, config);
+
+        auto [it, result] = m_textures.emplace(name, new Texture(std::move(image), std::move(sampler)));
+        return result;
+    }
+
+    bool ResourceManager::createTextureWithoutSampler(const std::string& name, uint32_t width, uint32_t height, VkFormat format, bool depth)
+    {
+        VkImageUsageFlags usageflags;
+        VkImageAspectFlags aspectflags;
+        if (depth) {
+            usageflags = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+            aspectflags = VK_IMAGE_ASPECT_DEPTH_BIT;
+        }
+        else {
+            usageflags = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+            aspectflags = VK_IMAGE_ASPECT_COLOR_BIT;
+        }
+
+        Image image = Image(*m_device,
+                width, height, format,
+                VK_IMAGE_TILING_OPTIMAL,
+                usageflags,
+                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                aspectflags);
+        auto [it, result] = m_textures.emplace(name, new Texture(std::move(image), {}));
+        return result;
+    }
+
+
+    Texture* ResourceManager::getTextureByName(const std::string& name) const
     {
         auto it = m_textures.find(name);
         if (it != m_textures.end()) {
@@ -173,7 +217,7 @@ namespace Lumos
         return result;
     }
 
-    VkDescriptorSet ResourceManager::getSetByNameAndIndex(const std::string& name, uint32_t index)
+    VkDescriptorSet ResourceManager::getSetByNameAndIndex(const std::string& name, uint32_t index) const
     {
         auto it = m_descriptorsets.find(name);
         if (it != m_descriptorsets.end()) {

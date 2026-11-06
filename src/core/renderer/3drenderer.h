@@ -28,6 +28,7 @@ namespace Lumos
         {
             uint32_t framesinflight = 2;
             VkFormat colorformat;
+            std::span<const VkDescriptorSetLayout> layouts;
             VkDescriptorSetLayout globlayout;
             VkDescriptorSetLayout layout;
             std::string shaderfilepath;

@@ -13,6 +13,11 @@ add_executable(game
     atlasloader.h
     atlasloader.cpp
     defaulttypes.h
+    passes/terrainpass.h
+    passes/terrainpass.cpp
+    passes/scenepass.h
+    passes/scenepass.cpp
+    passes/passconfig.h
 )
 
 set_property(TARGET game PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/buildvs")

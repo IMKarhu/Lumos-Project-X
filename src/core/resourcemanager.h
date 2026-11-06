@@ -1,5 +1,6 @@
 #pragma once
 #include "renderer/descriptor.h"
+#include "renderer/texture.h"
 #include <unordered_map>
 #include <vector>
 #include <memory>
@@ -27,6 +28,7 @@ namespace Lumos
     class Device;
     class Buffer;
     class Texture;
+    class Image;
     class CORE_API ResourceManager
     {
     public:
@@ -48,10 +50,16 @@ namespace Lumos
         std::vector<Buffer*> createBuffer(const std::string& name, void* size, void* data, VkBufferUsageFlags type) const;
 
         bool createTexture(const std::string& name, std::filesystem::path filepath);
-        Texture* getTextureByName(const std::string& name);
+        /*
+         * Samplers FilterMode is Linear and anistropy is enabled by default.
+         * Probably should look into a way that those can be edited
+         */
+        bool createTextureImage(const std::string& name, uint32_t width, uint32_t height, VkFormat format);
+        bool createTextureWithoutSampler(const std::string& name, uint32_t width, uint32_t height, VkFormat format, bool depth = false);
+        Texture* getTextureByName(const std::string& name) const;
 
         bool allocDescriptorSets(const std::string& name, uint32_t size);
-        VkDescriptorSet getSetByNameAndIndex(const std::string& name, uint32_t index);
+        VkDescriptorSet getSetByNameAndIndex(const std::string& name, uint32_t index) const;
 
         void createDescriptorLayout(const std::string& name, std::span<const BindingConfig> bindings);
         VkDescriptorSetLayout getLayoutByName(const std::string& name);

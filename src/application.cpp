@@ -30,26 +30,32 @@ Application::Application()
     Ecs& ecs = m_scene.ecs();
     Entity player = ecs.createEntity("player");
     Lumos::Transform trans;
-    trans.position = glm::vec3(0.0f);
-    trans.size = glm::vec2({20.0f, 10.0f});
+    trans.position = glm::vec3(2.0f);
+    trans.size = glm::vec2({10.0f, 10.0f});
     trans.rotation = 0.0f;
     Lumos::Model model;
     model.model = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0f));
     Lumos::Camera camera;
-    auto view = lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    auto proj = glm::perspective(glm::radians(45.0f), static_cast<float>(m_window->width()) / static_cast<float>(m_window->height()), 0.1f, 10.0f);
+    camera.forward = glm::vec3(-2.0f);
+    Lumos::CameraUBO camubo;
+
+    auto view = lookAt(trans.position, trans.position + camera.forward, camera.up);
+    auto proj = glm::perspective(glm::radians(45.0f),
+            static_cast<float>(m_window->width()) / static_cast<float>(m_window->height()),
+            camera.near, camera.far);
     proj[1][1] *= -1;
-    camera.viewproj = proj * view;
+    camubo.viewproj = proj * view;
 
     Lumos::InputState inputstate;
     inputstate.moved = true;
     Lumos::Size indexsize;
-    indexsize.size = static_cast<uint32_t>(DefaultTypes::DefaultCube::indices.size());
+    indexsize.size = static_cast<uint32_t>(DefaultTypes::Cube::indices.size());
     ecs.addComponent(player, trans);
     ecs.addComponent(player, camera);
     ecs.addComponent(player, inputstate);
     ecs.addComponent(player, indexsize);
     ecs.addComponent(player, model);
+    ecs.addComponent(player, camubo);
     bool testbool = true;
     auto atlas = AtlasLoader::load("../testjsons/test.json");
     m_resourcemanager->createTexture("sprite", atlas.texturePath());
@@ -147,20 +153,20 @@ void Application::initializeResources()
     }
     // bool ResourceManager::createBuffer(const std::string& name, void* size, void* data, VkBufferUsageFlags type)
 
-    VkDeviceSize size = sizeof(DefaultTypes::DefaultCube::vertices[0]) * DefaultTypes::DefaultCube::vertices.size();
+    VkDeviceSize size = sizeof(DefaultTypes::Cube::vertices[0]) * DefaultTypes::Cube::vertices.size();
     auto buffers = m_resourcemanager->createBuffer("cubevertex",
                                                   (void*)size,
-                                                  (void*)DefaultTypes::DefaultCube::vertices.data(),
+                                                  (void*)DefaultTypes::Cube::vertices.data(),
                                                   VK_BUFFER_USAGE_VERTEX_BUFFER_BIT); 
     if (buffers.empty()) {
         throw std::runtime_error("failed to create a vertex buffer and vector is empty");
     }
     m_resourcemanager->cacheBuffers("cubevertex", buffers);
 
-    size = sizeof(DefaultTypes::DefaultCube::indices[0]) * DefaultTypes::DefaultCube::indices.size();
+    size = sizeof(DefaultTypes::Cube::indices[0]) * DefaultTypes::Cube::indices.size();
     buffers = m_resourcemanager->createBuffer("cubeindex",
                                                   (void*)size,
-                                                  (void*)DefaultTypes::DefaultCube::indices.data(),
+                                                  (void*)DefaultTypes::Cube::indices.data(),
                                                   VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
     if (buffers.empty()) {
         throw std::runtime_error("failed to create a index buffer and vector is empty");

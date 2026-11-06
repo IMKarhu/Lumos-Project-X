@@ -2,6 +2,7 @@
 #include <vulkan/vulkan.h>
 #include <string>
 #include <vector>
+#include <span>
 
 namespace Lumos
 {
@@ -9,7 +10,7 @@ namespace Lumos
         std::vector<VkPipelineShaderStageCreateInfo> shaderstages;
         std::vector<VkVertexInputBindingDescription> vertexbindings;
         std::vector<VkVertexInputAttributeDescription> vertexattributes;
-        std::vector<VkDescriptorSetLayout> descriptorlayouts;
+        std::span<const VkDescriptorSetLayout> descriptorlayouts;
         VkPrimitiveTopology topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
         VkPolygonMode polygonmode = VK_POLYGON_MODE_FILL;
         VkCullModeFlags cullmode = VK_CULL_MODE_NONE;//OR FOR NOW VK_CULL_MODE_NONE VK_CULL_MODE_BACK_BIT

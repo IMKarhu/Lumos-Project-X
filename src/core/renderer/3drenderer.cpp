@@ -37,7 +37,7 @@ namespace Lumos
         desc.vertexbindings.push_back(Vertex::bindingDescription());
         desc.vertexattributes = Vertex::attributeDescription();
         desc.colorformat = rcd.colorformat;
-        desc.descriptorlayouts.push_back(rcd.globlayout);
+        desc.descriptorlayouts = rcd.layouts;
         // desc.descriptorlayouts.push_back(rcd.layout);
         VkPushConstantRange pushconstant{
             .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
