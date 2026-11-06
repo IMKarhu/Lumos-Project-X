@@ -59,7 +59,6 @@ void RenderSystem::update(Ecs& ecs, Lumos::ResourceManager& manager, float dt)
 
     auto globalset = manager.getSetByNameAndIndex("global", frameinfo.frameindex);
     m_terrainpass.begin(frameinfo, manager);
-    Lumos::Transform t;
     for (auto ent : ecs.view<Lumos::Size>()) {
         auto& s = ecs.getComponent<Lumos::Size>(ent);
         auto& p = ecs.getComponent<Lumos::Model>(ent);

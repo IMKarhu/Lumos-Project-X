@@ -2,6 +2,7 @@
 #include "renderer/vertex.h"
 #include "renderer/buffer.h"
 #include <utility>
+#include <print>
 
 TerrainPass::~TerrainPass()
 {
@@ -31,7 +32,8 @@ TerrainPass& TerrainPass::operator=(TerrainPass&& other) noexcept
 
 void TerrainPass::submit(uint32_t size)
 {
-    m_size = size;
+    // std::println("pushing size: {}", size);
+    m_sizes.push_back(size);
 }
 
 void TerrainPass::begin(Lumos::Device::FrameInfo frameinfo, const Lumos::ResourceManager& manager)
@@ -192,6 +194,8 @@ TerrainPass TerrainPass::create(Lumos::Device& device, PassConfig config)
 
 void TerrainPass::flush(Lumos::Device::FrameInfo frameinfo, const Lumos::ResourceManager& manager)
 {
+    for (size_t i = 0; i < m_sizes.size(); i++) {
+
         // vkCmdBindDescriptorSets(frameinfo.cmdbuf,
         //         VK_PIPELINE_BIND_POINT_GRAPHICS,
         //         m_pipeline.layout(),
@@ -216,9 +220,10 @@ void TerrainPass::flush(Lumos::Device::FrameInfo frameinfo, const Lumos::Resourc
         vkCmdBindVertexBuffers(frameinfo.cmdbuf, 0, 1, buffers, offsets);
         auto ibuffer = manager.getBufferByNameAndIndex("cubeindex", 0);
         vkCmdBindIndexBuffer(frameinfo.cmdbuf, ibuffer->buffer(), 0, VK_INDEX_TYPE_UINT32);
-        vkCmdDrawIndexed(frameinfo.cmdbuf, m_size, 1, 0, 0, 0);
+        vkCmdDrawIndexed(frameinfo.cmdbuf, m_sizes[i], 1, 0, 0, 0);
         // vkCmdDraw(cmdbuf, static_cast<uint32_t>(m_gpusprites.size()) * 6, 1, 0, 0);
-
+    }
+    m_sizes.clear();
 }
 
 void TerrainPass::destroy()

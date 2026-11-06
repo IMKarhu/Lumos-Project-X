@@ -25,6 +25,7 @@ private:
     Lumos::GraphicsPipeline m_pipeline;
     uint32_t m_width = 1280;
     uint32_t m_height = 720;
+    std::vector<uint32_t> m_sizes;
     uint32_t m_size = 0;
     struct PushConstant
     {

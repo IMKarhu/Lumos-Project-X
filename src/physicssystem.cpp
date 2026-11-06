@@ -37,13 +37,25 @@ void PhysicsSystem::update(Ecs& ecs, float dt)
     for (auto ent : ecs.view<Lumos::Camera>()) {
         auto& t = ecs.getComponent<Lumos::Transform>(ent);
         auto& i = ecs.getComponent<Lumos::InputState>(ent);
-        t.position.z += dy * dt;
-        t.position.x += dx * dt;
-        auto& c = ecs.getComponent<Lumos::Camera>(ent);
-        auto& m = ecs.getComponent<Lumos::Model>(ent);
-        // m.model = glm::rotate(glm::mat4(1.0f), dt * glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0f));
-    // auto view = lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    // auto proj = glm::perspective(glm::radians(45.0f), static_cast<float>(m_window->width()) / static_cast<float>(m_window->height()), 0.1f, 10.0f);
+        auto& cuo = ecs.getComponent<Lumos::CameraUBO>(ent);
+        auto& cam = ecs.getComponent<Lumos::Camera>(ent);
+
+        float yaw = -90.0f;
+        float pitch = 0.0f;
+        glm::vec3 direction;
+        direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+        direction.y = sin(glm::radians(pitch));
+        direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+        // cam.forward = glm::normalize(direction);
+        t.position += cam.forward * dy * dt;
+        t.position += glm::normalize(glm::cross(cam.forward, cam.up)) * dx * dt;
+        std::println("forward: {}x{}x{}",cam.forward.x,cam.forward.y,cam.forward.z);
+        auto view = lookAt(t.position, t.position + cam.forward, cam.up);
+        auto proj = glm::perspective(glm::radians(45.0f),
+            16/(float)9,
+            cam.near, cam.far);
+        proj[1][1] *= -1.0f;
+        cuo.viewproj = proj * view;
         // c.viewproj = c.viewproj * m.model;
 
         // auto proj = glm::ortho(t.position.x - t.size.x * 0.5f,

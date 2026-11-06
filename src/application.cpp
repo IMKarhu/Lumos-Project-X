@@ -4,8 +4,6 @@
 #include "renderer/buffer.h"
 #include "defaulttypes.h"
 
-#include "textureatlas.h"
-#include "atlasloader.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <array>
 #include <chrono>
@@ -33,53 +31,40 @@ Application::Application()
     trans.position = glm::vec3(2.0f);
     trans.size = glm::vec2({10.0f, 10.0f});
     trans.rotation = 0.0f;
-    Lumos::Model model;
-    model.model = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0f));
     Lumos::Camera camera;
     camera.forward = glm::vec3(-2.0f);
+    camera.up = glm::vec3(0.0f, 0.0f, 1.0f);
+    camera.far = 10.0f;
+    camera.near = 0.1f;
     Lumos::CameraUBO camubo;
-
+// static_cast<float>(m_window->width()) / static_cast<float>(m_window->height())
     auto view = lookAt(trans.position, trans.position + camera.forward, camera.up);
     auto proj = glm::perspective(glm::radians(45.0f),
-            static_cast<float>(m_window->width()) / static_cast<float>(m_window->height()),
+            16/(float)9,
             camera.near, camera.far);
     proj[1][1] *= -1;
     camubo.viewproj = proj * view;
 
     Lumos::InputState inputstate;
     inputstate.moved = true;
-    Lumos::Size indexsize;
-    indexsize.size = static_cast<uint32_t>(DefaultTypes::Cube::indices.size());
     ecs.addComponent(player, trans);
     ecs.addComponent(player, camera);
     ecs.addComponent(player, inputstate);
-    ecs.addComponent(player, indexsize);
-    ecs.addComponent(player, model);
     ecs.addComponent(player, camubo);
-    bool testbool = true;
-    auto atlas = AtlasLoader::load("../testjsons/test.json");
-    m_resourcemanager->createTexture("sprite", atlas.texturePath());
-    atlas.addRegion("floor", {0,0}, {64, 32});
-    atlas.addRegion("floor2", {64,0}, {64, 32});
-    for (size_t i = 0; i < m_tilemap.tiles().size(); i++) {
-        Entity ent = ecs.createEntity("tile");
+    for (size_t i = 0; i < 10; i++) {
+        Entity ent = ecs.createEntity("cube");
         Lumos::Transform t;
-        t.size = glm::vec2(2, 1);
+        t.size = glm::vec2(10, 10);
         t.rotation = 0.0f;
+        t.position = glm::vec3(0.0f+i, 0.0f, 0.0f);
         ecs.addComponent(ent, t);
-        Lumos::Tile tile;
-        if(testbool) {
-            auto uvrect = atlas.uvRect("floor");
-            tile.uvrect = uvrect;
-            testbool = false;
-        }
-        else
-        {
-            auto uvrect = atlas.uvRect("floor2");
-            tile.uvrect = uvrect;
-            testbool = true;
-        }
-        ecs.addComponent(ent, tile);
+        Lumos::Model m;
+        m.model = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0f));
+        ecs.addComponent(ent, m);
+        Lumos::Size indexsize;
+        indexsize.size = static_cast<uint32_t>(DefaultTypes::Cube::indices.size());
+        ecs.addComponent(ent, indexsize);
+        std::println("creating cube");
     }
     initializeResources();
     m_rendersystem->createRenderers(*m_resourcemanager, m_vkconfig);
@@ -137,7 +122,7 @@ void Application::initializeResources()
     std::vector<Lumos::Buffer*> ubos;
     for (size_t i = 0; i < m_vkconfig.framesinflight; i++) {
         auto buf = new Lumos::Buffer(*m_rendersystem->device(),
-                sizeof(Lumos::Camera),
+                sizeof(Lumos::CameraUBO),
                 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
         buf->map();
@@ -147,7 +132,7 @@ void Application::initializeResources()
     for (size_t i = 0; i < m_vkconfig.framesinflight; i++) {
         Lumos::DescriptorWriter writer;
         writer.writeBuffer(0, *m_resourcemanager->getBufferByNameAndIndex("global ubos", i),
-                sizeof(Lumos::Camera),
+                sizeof(Lumos::CameraUBO),
                 Lumos::DescriptorWriter::UNIFORM);
         writer.update(*m_rendersystem->device(), m_resourcemanager->getSetByNameAndIndex("global", i));
     }
