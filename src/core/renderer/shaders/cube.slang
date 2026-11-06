@@ -1,5 +1,5 @@
 struct VSInput {
-    float2 position;
+    float3 position;
     float3 color;
 };
 
@@ -24,7 +24,7 @@ struct VertexOutput {
 VertexOutput vertMain(VSInput input)
 {
     VertexOutput output;
-    output.position = float4(input.position, 0.0, 1.0);
+    output.position = mul(ubo.projview, mul(pushconstant.model, float4(input.position, 1.0)));
     output.color = input.color;
     return output;
 }

@@ -50,7 +50,7 @@ void PhysicsSystem::update(Ecs& ecs, float dt)
                       t.position.y - t.size.y * 0.5f,
                       0.0f,
                       1.0f);
-        c.viewproj = proj * glm::translate(glm::mat4(1.0f), glm::vec3(-t.position, 0.0f));
+        // c.viewproj = proj * glm::translate(glm::mat4(1.0f), glm::vec3(-t.position, 0.0f));
         i.moved = true;
     }
 }

@@ -5,7 +5,7 @@
 namespace Lumos
 {
     struct Vertex {
-        glm::vec2 position;
+        glm::vec3 position;
         glm::vec3 color;
         // glm::vec2 texcoord;
 
@@ -19,7 +19,7 @@ namespace Lumos
             std::vector<VkVertexInputAttributeDescription> description(2);
             description[0].binding = 0;
             description[0].location = 0;
-            description[0].format = VK_FORMAT_R32G32_SFLOAT;
+            description[0].format = VK_FORMAT_R32G32B32_SFLOAT;
             description[0].offset = offsetof(Vertex, position);
 
             description[1].binding = 0;

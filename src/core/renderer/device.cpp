@@ -335,6 +335,35 @@ namespace Lumos
         return 0;
     }
 
+    VkFormat Device::findSupportedFormat(const std::vector<VkFormat>& formats,
+                                         VkImageTiling tiling,
+                                         VkFormatFeatureFlags flags)
+    {
+        for (const auto format : formats) {
+            VkFormatProperties properties;
+            vkGetPhysicalDeviceFormatProperties(m_physicaldevice, format, &properties);
+            if (tiling == VK_IMAGE_TILING_LINEAR && (properties.linearTilingFeatures & flags) == flags) {
+                return format;
+            } else if (tiling == VK_IMAGE_TILING_OPTIMAL && (properties.optimalTilingFeatures & flags) == flags) {
+                return format;
+            }
+        }
+        throw std::runtime_error("failed to find supported format");
+    }
+
+    VkFormat Device::depthformat()
+    {
+        return findSupportedFormat(
+                {VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT},
+                 VK_IMAGE_TILING_OPTIMAL,
+                 VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
+    }
+
+    bool Device::stenchilComponent(VkFormat format)
+    {
+        return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
+    }
+
     SwapChainSupportDetails Device::querySwapChainSupport(VkPhysicalDevice pdevice)
     {
         SwapChainSupportDetails details;

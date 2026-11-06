@@ -120,6 +120,6 @@ add_slang_shader_target(compile_shaders
     ${CMAKE_CURRENT_SOURCE_DIR}/renderer/shaders/sprite.slang
     ${CMAKE_CURRENT_SOURCE_DIR}/renderer/shaders/presentation.slang
     ${CMAKE_CURRENT_SOURCE_DIR}/renderer/shaders/cube.slang
-
+    ${CMAKE_CURRENT_SOURCE_DIR}/renderer/shaders/debug.slang
 )
 add_dependencies(core compile_shaders)

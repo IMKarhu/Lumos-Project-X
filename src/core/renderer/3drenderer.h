@@ -2,6 +2,8 @@
 #include "baserenderer.h"
 #include "device.h"
 #include "pipeline.h"
+#include "sampler.h"
+#include "image.h"
 
 #ifdef _WIN32
     #ifdef CORE_EXPORT
@@ -18,7 +20,7 @@ namespace Lumos
     class Image;
     class Sampler;
     class Buffer;
-    class DRenderer : public RendererBase
+    class CORE_API DRenderer : public RendererBase
     {
     public:
         //Horrible name for a struct, but didnt come up with a better one
@@ -43,10 +45,11 @@ namespace Lumos
         Device* m_device = nullptr;
         GraphicsPipeline m_pipeline;
         std::unique_ptr<Image> m_image;
+        std::unique_ptr<Image> m_depthimage;
         std::unique_ptr<Sampler> m_sampler;
         uint32_t m_width = 1280;
         uint32_t m_height = 720;
-        uint32_t m_size;
+        uint32_t m_size = 0;
         
         struct PushConstant
         {

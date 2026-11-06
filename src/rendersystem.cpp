@@ -21,13 +21,6 @@ RenderSystem::~RenderSystem() = default;
 
 void RenderSystem::createRenderers(Lumos::ResourceManager& manager, Lumos::VulkanConfig config)
 {
-    // Lumos::SpriteRenderer::RendererConstructDescription rcd;
-    // rcd.shaderfilepath = "shaders/sprite.spv";
-    // rcd.colorformat = m_device->defaultformat();
-    // rcd.framesinflight = config.framesinflight;
-    // rcd.globlayout = manager.getLayoutByName("global");
-    // rcd.layout = manager.getLayoutByName("sprite");
-    // m_spriterenderer = m_factory->createSpriteRenderer(*m_device, rcd);
     Lumos::DRenderer::RendererConstructDescription cubeconfig;
     cubeconfig.colorformat = m_device->defaultformat();
     cubeconfig.framesinflight = config.framesinflight;
@@ -65,16 +58,12 @@ void RenderSystem::update(Ecs& ecs, Lumos::ResourceManager& manager, float dt)
     Lumos::Transform t;
     for (auto ent : ecs.view<Lumos::Size>()) {
         auto& s = ecs.getComponent<Lumos::Size>(ent);
+        auto& p = ecs.getComponent<Lumos::Model>(ent);
         m_cuberenderer->submit(t, s.size, frameinfo);
+        frameinfo.pushcst.model = p.model;
     }
     m_cuberenderer->end(frameinfo, manager);
 
-    // m_spriterenderer->begin(frameinfo, globalset);
-    // for (auto ent : ecs.view<Lumos::Tile>()) {
-    //     auto& t = ecs.getComponent<Lumos::Transform>(ent);
-    //     auto& tile = ecs.getComponent<Lumos::Tile>(ent);
-    //     m_spriterenderer->submit(t, tile, frameinfo);
-    // }
     // m_spriterenderer->map(*manager.getBufferByNameAndIndex("sprite", frameinfo.frameindex));
     // frameinfo.set = manager.getSetByNameAndIndex("sprite", frameinfo.frameindex);
     // m_spriterenderer->end(frameinfo);

@@ -6,7 +6,7 @@ namespace Lumos
 {
     struct Transform
     {
-        glm::vec2 position;
+        glm::vec3 position;
         glm::vec2 size;
         float rotation;
     };
@@ -20,6 +20,11 @@ namespace Lumos
     struct Tile
     {
         glm::vec4 uvrect;
+    };
+
+    struct Model
+    {
+        glm::mat4 model = glm::mat4(1.0f);
     };
 
     struct Size

@@ -1,13 +1,13 @@
 #include "application.h"
 #include "ecs/components.h"
 #include "resourcemanager.h"
-#include "renderer/texture.h"
 #include "renderer/buffer.h"
 #include "defaulttypes.h"
 
 #include "textureatlas.h"
 #include "atlasloader.h"
 #include <glm/gtc/matrix_transform.hpp>
+#include <array>
 #include <chrono>
 #include <format>
 #include <stdexcept>
@@ -30,18 +30,16 @@ Application::Application()
     Ecs& ecs = m_scene.ecs();
     Entity player = ecs.createEntity("player");
     Lumos::Transform trans;
-    trans.position = glm::vec2(0.0f);
+    trans.position = glm::vec3(0.0f);
     trans.size = glm::vec2({20.0f, 10.0f});
     trans.rotation = 0.0f;
+    Lumos::Model model;
+    model.model = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0f));
     Lumos::Camera camera;
-    auto proj = glm::ortho(trans.position.x - trans.size.x * 0.5f,
-                  trans.position.x + trans.size.x * 0.5f,
-                  trans.position.y + trans.size.y * 0.5f,
-                  trans.position.y - trans.size.y * 0.5f,
-                  0.0f,
-                  1.0f);
-    // proj[1][1] *= -1;
-    camera.viewproj = proj * glm::translate(glm::mat4(1.0f), glm::vec3(-trans.position, 0.0f));
+    auto view = lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    auto proj = glm::perspective(glm::radians(45.0f), static_cast<float>(m_window->width()) / static_cast<float>(m_window->height()), 0.1f, 10.0f);
+    proj[1][1] *= -1;
+    camera.viewproj = proj * view;
 
     Lumos::InputState inputstate;
     inputstate.moved = true;
@@ -50,6 +48,8 @@ Application::Application()
     ecs.addComponent(player, trans);
     ecs.addComponent(player, camera);
     ecs.addComponent(player, inputstate);
+    ecs.addComponent(player, indexsize);
+    ecs.addComponent(player, model);
     bool testbool = true;
     auto atlas = AtlasLoader::load("../testjsons/test.json");
     m_resourcemanager->createTexture("sprite", atlas.texturePath());
@@ -58,7 +58,6 @@ Application::Application()
     for (size_t i = 0; i < m_tilemap.tiles().size(); i++) {
         Entity ent = ecs.createEntity("tile");
         Lumos::Transform t;
-        t.position = IsometricProjection::gridToWorld(m_tilemap.tiles()[i].position);
         t.size = glm::vec2(2, 1);
         t.rotation = 0.0f;
         ecs.addComponent(ent, t);
@@ -167,53 +166,6 @@ void Application::initializeResources()
         throw std::runtime_error("failed to create a index buffer and vector is empty");
     }
     m_resourcemanager->cacheBuffers("cubeindex", buffers);
-
-
-    //sprite
-    // const std::array spritepool {
-    //     Lumos::PoolConfig {
-    //         .count = m_vkconfig.framesinflight,
-    //         .type = Lumos::DescriptorType::CombinedImageSampler
-    //     },
-    //         Lumos::PoolConfig {
-    //         .count = m_vkconfig.framesinflight,
-    //         .type = Lumos::DescriptorType::Storage
-    //     },
-    // };
-    // const std::array spritebindings {
-    //     Lumos::BindingConfig {
-    //         .binding = 0,
-    //         .type = Lumos::DescriptorType::CombinedImageSampler,
-    //         .count = 1,
-    //         .flags = Lumos::StageFlags::Fragment
-    //     },
-    //     Lumos::BindingConfig {
-    //         .binding = 1,
-    //         .type = Lumos::DescriptorType::Storage,
-    //         .count = 1,
-    //         .flags = Lumos::StageFlags::Vertex
-    //     }
-    // };
-    // std::vector<Lumos::Buffer*> spritestorage;
-    // for (size_t i = 0; i < m_vkconfig.framesinflight; i++) {
-    //     auto buf = new Lumos::Buffer(*m_rendersystem->device(),
-    //             sizeof(Lumos::SpriteRenderer::SpriteGPU),
-    //             VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-    //             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-    //     spritestorage.push_back(std::move(buf));
-    // }
-    // m_resourcemanager->cacheBuffers("sprite", spritestorage);
-    // m_resourcemanager->createTexture("sprite", "../testjsons/testsprite.ktx2");
-    // m_resourcemanager->create("sprite", spritepool, spritebindings, m_vkconfig.framesinflight);
-    // for (size_t i = 0; i < m_vkconfig.framesinflight; i++) {
-    //     Lumos::DescriptorWriter writer;
-    //     Lumos::Texture& tex = *m_resourcemanager->getTextureByName("sprite");
-    //     writer.writeImage(0, tex.image(), tex.sampler());
-    //     writer.writeBuffer(1, *m_resourcemanager->getBufferByNameAndIndex("sprite", i),
-    //             sizeof(Lumos::SpriteRenderer::SpriteGPU),
-    //             Lumos::DescriptorWriter::STORAGE);
-    //     writer.update(*m_rendersystem->device(), m_resourcemanager->getSetByNameAndIndex("sprite", i));
-    // }
 
 
     //presentation stuff

@@ -4,6 +4,7 @@
 #include <optional>
 #include <vector>
 #include <memory>
+#include <glm/glm.hpp>
 
 #ifdef _WIN32
     #ifdef CORE_EXPORT
@@ -42,6 +43,12 @@ namespace Lumos
         bool validationlayers = false;
     };
 
+    struct PushConstant
+    {
+        glm::mat4 model;
+    };
+
+
 
     class Window;
     class SwapChain;
@@ -62,6 +69,7 @@ namespace Lumos
             VkExtent2D extent;
             VkImage offscreenimage;
             VkSampler offscreensampler;
+            PushConstant pushcst;
         };
 
         Device(Window& window, VulkanConfig config);
@@ -85,7 +93,12 @@ namespace Lumos
 
         QueueFamilyIndices findQueueFamilies(VkPhysicalDevice pdevice);
         uint32_t findMemoryType(uint32_t typefilter, VkMemoryPropertyFlags flags);
+        VkFormat findSupportedFormat(const std::vector<VkFormat>& formats,
+                                     VkImageTiling tiling,
+                                     VkFormatFeatureFlags flags);
+        VkFormat depthformat();
         SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice pdevice);
+        bool stenchilComponent(VkFormat format);
         VkCommandBuffer beginSingleTimeCommands();
         void endSingleTimeCommands(VkCommandBuffer cmdbuf);
         void copyBuffers(Buffer& srcBuffer, Buffer& dstBuffer, VkDeviceSize size);

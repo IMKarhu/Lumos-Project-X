@@ -49,7 +49,7 @@ namespace Lumos
         desc.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
         desc.polygonmode = VK_POLYGON_MODE_FILL;
         desc.cullmode = VK_CULL_MODE_BACK_BIT;
-        desc.frontface = VK_FRONT_FACE_CLOCKWISE;
+        desc.frontface = VK_FRONT_FACE_COUNTER_CLOCKWISE;
         desc.dstalphablendfactor = VK_BLEND_FACTOR_ZERO;
 
         m_pipeline = GraphicsPipeline::create(device, desc);
@@ -65,6 +65,8 @@ namespace Lumos
         config.enableanisotropy = true;
         config.filtermode = FilterMode::Linear;
         m_sampler = std::make_unique<Sampler>(*m_device, config);
+
+        // m_depthimage = std::make_unique<Image>(*m_device, m_width, m_height);
     }
 
     void DRenderer::begin(Device::FrameInfo frameinfo, VkDescriptorSet globalset)
@@ -173,7 +175,6 @@ namespace Lumos
         //         &frameinfo.set,
         //         0,
         //         nullptr);
-        PushConstant pushconstant;
         // glm::mat4 transform = glm::mat4(1.0f);
         // transform = glm::translate(transform, glm::vec3(sprite.position, 0.0f));
         // transform = glm::rotate(transform, sprite.rotation, glm::vec3(0.0f, 0.0f, 1.0f));
@@ -184,12 +185,12 @@ namespace Lumos
                 VK_SHADER_STAGE_VERTEX_BIT,
                 0,
                 sizeof(PushConstant),
-                &pushconstant);
+                &frameinfo.pushcst);
         VkBuffer buffers[] = { manager.getBufferByNameAndIndex("cubevertex", 0)->buffer() };
         VkDeviceSize offsets[] = {0};
         vkCmdBindVertexBuffers(frameinfo.cmdbuf, 0, 1, buffers, offsets);
         auto ibuffer = manager.getBufferByNameAndIndex("cubeindex", 0);
-        vkCmdBindIndexBuffer(frameinfo.cmdbuf, ibuffer->buffer(), 0, VK_INDEX_TYPE_UINT16);
+        vkCmdBindIndexBuffer(frameinfo.cmdbuf, ibuffer->buffer(), 0, VK_INDEX_TYPE_UINT32);
         vkCmdDrawIndexed(frameinfo.cmdbuf, m_size, 1, 0, 0, 0);
         // vkCmdDraw(cmdbuf, static_cast<uint32_t>(m_gpusprites.size()) * 6, 1, 0, 0);
     }

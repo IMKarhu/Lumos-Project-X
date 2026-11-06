@@ -22,6 +22,7 @@ else()
 endif()
 
 add_subdirectory(glm)
+add_compile_definitions(GLM_FORCE_DEPTH_ZERO_TO_ONE)
 
 set(BUILD_SHARED_LIBS ON)
 set(KTX_FEATURE_TOOLS ON CACHE BOOL "Build KTX tools" FORCE)

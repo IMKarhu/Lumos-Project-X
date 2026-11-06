@@ -220,7 +220,7 @@ namespace Lumos
     DescriptorPool* ResourceManager::getPoolClassByName(const std::string& name)
     {
         auto it = m_descriptorpools.find(name);
-        if (it != nullptr) {
+        if (it != m_descriptorpools.end()) {
             return it->second.get();
         }
         return nullptr;
