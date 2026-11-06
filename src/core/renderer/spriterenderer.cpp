@@ -58,7 +58,8 @@ namespace Lumos
                             VK_FORMAT_B8G8R8A8_SRGB,
                             VK_IMAGE_TILING_OPTIMAL,
                             VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-                            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+                            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                            VK_IMAGE_ASPECT_COLOR_BIT);
         SamplerConfig config;
         config.enableanisotropy = false;
         config.filtermode = FilterMode::Nearest;
@@ -79,7 +80,8 @@ namespace Lumos
                               VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
                               VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
                               {},
-                              VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT);
+                              VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
+                              VK_IMAGE_ASPECT_COLOR_BIT);
 
         VkClearValue clearvalue{};
         clearvalue.color = {0.0f, 0.0f, 0.0f, 1.0f};
@@ -155,7 +157,8 @@ namespace Lumos
                               VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
                               VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
                               VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
-                              VK_ACCESS_2_SHADER_SAMPLED_READ_BIT);
+                              VK_ACCESS_2_SHADER_SAMPLED_READ_BIT,
+                              VK_IMAGE_ASPECT_COLOR_BIT);
     }
 
     void SpriteRenderer::map(Buffer& buffer)

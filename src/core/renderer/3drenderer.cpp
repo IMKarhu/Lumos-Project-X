@@ -46,11 +46,14 @@ namespace Lumos
         };
         desc.pushconstantcount = 1;
         desc.pushconstantranges.push_back(pushconstant);
+        desc.depthtest = true;
+        desc.depthwrite = true;
         desc.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
         desc.polygonmode = VK_POLYGON_MODE_FILL;
         desc.cullmode = VK_CULL_MODE_BACK_BIT;
         desc.frontface = VK_FRONT_FACE_COUNTER_CLOCKWISE;
         desc.dstalphablendfactor = VK_BLEND_FACTOR_ZERO;
+        desc.depthformat = m_device->depthformat();
 
         m_pipeline = GraphicsPipeline::create(device, desc);
         vkDestroyShaderModule(device.device(), shadermodule, nullptr);
@@ -59,37 +62,67 @@ namespace Lumos
                             VK_FORMAT_B8G8R8A8_SRGB,
                             VK_IMAGE_TILING_OPTIMAL,
                             VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-                            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+                            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                            VK_IMAGE_ASPECT_COLOR_BIT);
 
         SamplerConfig config;
         config.enableanisotropy = true;
         config.filtermode = FilterMode::Linear;
         m_sampler = std::make_unique<Sampler>(*m_device, config);
 
-        // m_depthimage = std::make_unique<Image>(*m_device, m_width, m_height);
+        m_depthimage = std::make_unique<Image>(*m_device,
+                m_width,
+                m_height,
+                m_device->depthformat(),
+                VK_IMAGE_TILING_OPTIMAL,
+                VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                VK_IMAGE_ASPECT_DEPTH_BIT);
     }
 
     void DRenderer::begin(Device::FrameInfo frameinfo, VkDescriptorSet globalset)
     {
         m_device->transitionImageLayout(m_image->image(),
-                              frameinfo.cmdbuf,
-                              VK_IMAGE_LAYOUT_UNDEFINED,
-                              VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL,
-                              VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
-                              VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
-                              {},
-                              VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT);
+                frameinfo.cmdbuf,
+                VK_IMAGE_LAYOUT_UNDEFINED,
+                VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL,
+                VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+                VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+                {},
+                VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
+                VK_IMAGE_ASPECT_COLOR_BIT);
 
-        VkClearValue clearvalue{};
-        clearvalue.color = {0.0f, 0.0f, 0.0f, 1.0f};
-        // clearvalue.depthStencil = {1.0f, 0};
+        m_device->transitionImageLayout(m_depthimage->image(),
+                frameinfo.cmdbuf,
+                VK_IMAGE_LAYOUT_UNDEFINED,
+                VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
+                VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT_KHR | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT_KHR,
+                VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT_KHR | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT_KHR,
+                VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+                VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+                VK_IMAGE_ASPECT_DEPTH_BIT);
+
+        std::array<VkClearValue, 2> clearvalues{};
+        clearvalues[0].color = {0.0f, 0.0f, 0.0f, 1.0f};
+        clearvalues[1].depthStencil = {1.0f, 0};
+
         VkRenderingAttachmentInfo attachmentinfo{};
         attachmentinfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
         attachmentinfo.imageView = m_image->imageview();
         attachmentinfo.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
         attachmentinfo.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         attachmentinfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        attachmentinfo.clearValue = clearvalue;
+        attachmentinfo.clearValue = clearvalues[0];
+
+        VkRenderingAttachmentInfo depthinfo{
+            .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
+            .imageView = m_depthimage->imageview(),
+            .imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+            .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+            .storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+            .clearValue = clearvalues[1]
+        };
+            
 
         VkRenderingInfoKHR renderinfo{};
         renderinfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR;
@@ -97,6 +130,7 @@ namespace Lumos
         renderinfo.layerCount = 1;
         renderinfo.colorAttachmentCount = 1;
         renderinfo.pColorAttachments = &attachmentinfo;
+        renderinfo.pDepthAttachment = &depthinfo;
 
         vkCmdBeginRendering(frameinfo.cmdbuf, &renderinfo);
 
@@ -148,7 +182,8 @@ namespace Lumos
                               VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
                               VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
                               VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
-                              VK_ACCESS_2_SHADER_SAMPLED_READ_BIT);
+                              VK_ACCESS_2_SHADER_SAMPLED_READ_BIT,
+                              VK_IMAGE_ASPECT_COLOR_BIT);
     }
 
     void DRenderer::map(Buffer& buffer)

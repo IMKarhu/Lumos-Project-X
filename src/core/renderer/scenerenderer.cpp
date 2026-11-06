@@ -49,7 +49,8 @@ namespace Lumos
                               VK_PIPELINE_STAGE_2_NONE,
                               VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
                               VK_ACCESS_2_NONE,
-                              VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT);
+                              VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
+                              VK_IMAGE_ASPECT_COLOR_BIT);
 
         VkClearValue clearvalue{};
         clearvalue.color = {0.0f, 0.0f, 0.0f, 1.0f};
@@ -110,7 +111,8 @@ namespace Lumos
                               VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
                               VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT,
                               VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
-                              {});
+                              {},
+                              VK_IMAGE_ASPECT_COLOR_BIT);
     }
 
     void SceneRenderer::map(Buffer& buffer){}

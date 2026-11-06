@@ -12,7 +12,8 @@ namespace Lumos
                  VkFormat format,
                  VkImageTiling tiling,
                  VkImageUsageFlags usageflags,
-                 VkMemoryPropertyFlags properties)
+                 VkMemoryPropertyFlags properties,
+                 VkImageAspectFlags aspectflags)
         : m_device(&device)
     {
         VkImageCreateInfo imageinfo {
@@ -54,7 +55,7 @@ namespace Lumos
                 .a = VK_COMPONENT_SWIZZLE_IDENTITY,
             },
             .subresourceRange = {
-                .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                .aspectMask = aspectflags,
                 .baseMipLevel = 0,
                 .levelCount = 1,
                 .baseArrayLayer = 0,

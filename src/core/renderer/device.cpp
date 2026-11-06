@@ -470,7 +470,8 @@ namespace Lumos
                                        VkPipelineStageFlags2 srcstagemask,
                                        VkPipelineStageFlags2 dststagemask,
                                        VkAccessFlags2 srcaccessmask,
-                                       VkAccessFlags2 dstaccessmask)
+                                       VkAccessFlags2 dstaccessmask,
+                                       VkImageAspectFlags aspectflags)
     {
         VkImageMemoryBarrier2 barrier {
             .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
@@ -484,7 +485,7 @@ namespace Lumos
             .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
             .image = image,
             .subresourceRange = {
-                .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                .aspectMask = aspectflags,
                 .baseMipLevel = 0,
                 .levelCount = 1,
                 .baseArrayLayer = 0,
@@ -634,7 +635,8 @@ namespace Lumos
         utils::populateDebugMessengerCreateInfo(debuginfo);
         VK_CHECK(utils::debugUtilsMessenger(m_instance, &debuginfo, nullptr, &m_debugmessenger));
     }
-    
+ 
+    //TODO: FIX THIS ASAP this does not handle DEPTH at the moment
     void Device::recreateSwapchain()
     {
         int width = 0;

@@ -110,7 +110,8 @@ namespace Lumos
                                    VkPipelineStageFlags2 srcstagemask,
                                    VkPipelineStageFlags2 dststagemask,
                                    VkAccessFlags2 srcaccessmask,
-                                   VkAccessFlags2 dstaccessmask);
+                                   VkAccessFlags2 dstaccessmask,
+                                   VkImageAspectFlags aspectflags);
         void transitionImageLayout2(VkImage image,
                                     VkFormat format,
                                     VkImageLayout oldlayout,

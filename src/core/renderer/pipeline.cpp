@@ -157,7 +157,8 @@ namespace Lumos
         VkPipelineRenderingCreateInfo renderinginfo {
             .sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
             .colorAttachmentCount = 1,
-            .pColorAttachmentFormats = &desc.colorformat
+            .pColorAttachmentFormats = &desc.colorformat,
+            .depthAttachmentFormat = desc.depthformat
         };
 
         VkGraphicsPipelineCreateInfo pipelineinfo {

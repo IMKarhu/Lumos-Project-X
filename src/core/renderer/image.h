@@ -24,7 +24,8 @@ namespace Lumos
               VkFormat format,
               VkImageTiling tiling,
               VkImageUsageFlags usageflags,
-              VkMemoryPropertyFlags properties);
+              VkMemoryPropertyFlags properties,
+              VkImageAspectFlags aspectflags);
 
         ~Image();
 
