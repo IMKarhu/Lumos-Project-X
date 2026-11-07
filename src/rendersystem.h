@@ -21,8 +21,6 @@ public:
     void update(Ecs& ecs, Lumos::ResourceManager& manager, float dt);
     void waitForDestroy();
     Lumos::Device* device()const;
-    glm::vec2 snapToPixelGrid(glm::vec2 position);
-
 private:
     std::unique_ptr<Lumos::Device> m_device;
     TerrainPass m_terrainpass;

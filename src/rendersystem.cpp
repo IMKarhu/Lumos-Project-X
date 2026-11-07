@@ -79,10 +79,3 @@ Lumos::Device* RenderSystem::device() const
 {
     return m_device.get();
 }
-
-glm::vec2 RenderSystem::snapToPixelGrid(glm::vec2 position)
-{
-    constexpr float pixelsPerWorldUnit = 32.0f;
-    return glm::round(position * pixelsPerWorldUnit)
-     / pixelsPerWorldUnit;
-}
