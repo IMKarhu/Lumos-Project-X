@@ -1,6 +1,7 @@
 #include "terrainpass.h"
 #include "renderer/vertex.h"
 #include "renderer/buffer.h"
+#include <array>
 #include <utility>
 #include <print>
 
@@ -30,10 +31,10 @@ TerrainPass& TerrainPass::operator=(TerrainPass&& other) noexcept
 
 
 
-void TerrainPass::submit(uint32_t size)
+void TerrainPass::submit(uint32_t size, glm::mat4 model)
 {
-    // std::println("pushing size: {}", size);
     m_sizes.push_back(size);
+    m_pushconstantmodels.push_back(model);
 }
 
 void TerrainPass::begin(Lumos::Device::FrameInfo frameinfo, const Lumos::ResourceManager& manager)
@@ -214,7 +215,7 @@ void TerrainPass::flush(Lumos::Device::FrameInfo frameinfo, const Lumos::Resourc
                 VK_SHADER_STAGE_VERTEX_BIT,
                 0,
                 sizeof(PushConstant),
-                &frameinfo.pushcst);
+                &m_pushconstantmodels[i]);
         VkBuffer buffers[] = { manager.getBufferByNameAndIndex("cubevertex", 0)->buffer() };
         VkDeviceSize offsets[] = {0};
         vkCmdBindVertexBuffers(frameinfo.cmdbuf, 0, 1, buffers, offsets);
@@ -224,6 +225,7 @@ void TerrainPass::flush(Lumos::Device::FrameInfo frameinfo, const Lumos::Resourc
         // vkCmdDraw(cmdbuf, static_cast<uint32_t>(m_gpusprites.size()) * 6, 1, 0, 0);
     }
     m_sizes.clear();
+    m_pushconstantmodels.clear();
 }
 
 void TerrainPass::destroy()

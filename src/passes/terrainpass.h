@@ -16,7 +16,7 @@ public:
     TerrainPass(TerrainPass&& other) noexcept;
     TerrainPass& operator=(TerrainPass&& other) noexcept;
 
-    void submit(uint32_t size);
+    void submit(uint32_t size, glm::mat4 model);
     void begin(Lumos::Device::FrameInfo frameinfo, const Lumos::ResourceManager& manager);
     void end(Lumos::Device::FrameInfo frameinfo, const Lumos::ResourceManager& manager);
     static TerrainPass create(Lumos::Device& device, PassConfig config);
@@ -26,6 +26,7 @@ private:
     uint32_t m_width = 1280;
     uint32_t m_height = 720;
     std::vector<uint32_t> m_sizes;
+    std::vector<glm::mat4> m_pushconstantmodels;
     uint32_t m_size = 0;
     struct PushConstant
     {
