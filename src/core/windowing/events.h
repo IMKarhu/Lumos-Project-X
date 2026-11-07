@@ -35,7 +35,6 @@ namespace Lumos
 
         template<typename EventType>
         void publish(const EventType& event) {
-            // std::println("publish in eventbus");
             auto typeindex = std::type_index(typeid(EventType));
             auto it = m_subscribers.find(typeindex);
             if (it != m_subscribers.end()) {
@@ -78,6 +77,17 @@ namespace Lumos
     {
         double x;
         double y;
+        void dispatch(EventBus& bus) const override
+        {
+            bus.publish(*this);
+        }
+    };
+
+    struct MouseClickEvent : public Event
+    {
+        int button;
+        int action;
+        int mods;
         void dispatch(EventBus& bus) const override
         {
             bus.publish(*this);
