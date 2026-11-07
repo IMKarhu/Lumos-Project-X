@@ -2,19 +2,16 @@
 #include "windowing/window.h"
 #include "renderer/device.h"
 #include "resourcemanager.h"
-// #include "renderer/3drenderer.h"
-// #include "renderer/spriterenderer.h"
-// #include "renderer/scenerenderer.h"
 #include "renderer/buffer.h"
 #include "ecs/ecs.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <cstring>
+#include <array>
 
 RenderSystem::RenderSystem(Lumos::Window& window, Lumos::VulkanConfig config)
 {
     m_device = std::make_unique<Lumos::Device>(window, config);
-    // m_factory = std::make_unique<Lumos::RenderFactory>();
 }
 
 RenderSystem::~RenderSystem() = default;
@@ -62,7 +59,7 @@ void RenderSystem::update(Ecs& ecs, Lumos::ResourceManager& manager, float dt)
     for (auto ent : ecs.view<Lumos::Size>()) {
         auto& s = ecs.getComponent<Lumos::Size>(ent);
         auto& p = ecs.getComponent<Lumos::Model>(ent);
-        m_terrainpass.submit(s.size);
+        m_terrainpass.submit(s.size, p.model);
         frameinfo.pushcst.model = p.model;
     }
     m_terrainpass.end(frameinfo, manager);
