@@ -31,7 +31,7 @@ namespace Lumos
         glfwSetFramebufferSizeCallback(m_window, framebufferCallback);
         glfwSetKeyCallback(m_window, keyCallback);
         glfwSetCursorPosCallback(m_window, cursorCallback);
-
+        glfwSetMouseButtonCallback(m_window, mouseClickCallback);
     }
 
     Window::Window(uint32_t width, uint32_t height, std::string title)
@@ -62,6 +62,8 @@ namespace Lumos
         glfwSetFramebufferSizeCallback(m_window, framebufferCallback);
         glfwSetKeyCallback(m_window, keyCallback);
         glfwSetCursorPosCallback(m_window, cursorCallback);
+        glfwSetMouseButtonCallback(m_window, mouseClickCallback);
+
     }
 
     Window::~Window()
@@ -159,6 +161,7 @@ namespace Lumos
         glfwSetFramebufferSizeCallback(m_window, framebufferCallback);
         glfwSetKeyCallback(m_window, keyCallback);
         glfwSetCursorPosCallback(m_window, cursorCallback);
+        glfwSetMouseButtonCallback(m_window, mouseClickCallback);
     }
 
     void Window::framebufferCallback(GLFWwindow *window, int width, int height)
@@ -185,11 +188,24 @@ namespace Lumos
     {
         auto* eventbus = static_cast<EventBus*>(glfwGetWindowUserPointer(window));
         if (eventbus) {
-            // std::println("moving in window");
             CursorMoveEvent event;
             event.x = xpos;
             event.y = ypos;
+            eventbus->publish(event);
         }
+    }
+
+    void Window::mouseClickCallback(GLFWwindow* window, int button, int action, int mods)
+    {
+        auto* eventbus = static_cast<EventBus*>(glfwGetWindowUserPointer(window));
+        if (eventbus) {
+            MouseClickEvent event;
+            event.button = button;
+            event.action = action;
+            event.mods = mods;
+            eventbus->publish(event);
+        }
+
     }
 }// namespace Lumos
 
