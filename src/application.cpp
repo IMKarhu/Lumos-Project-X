@@ -15,7 +15,7 @@ Application::Application()
     m_window = std::make_unique<Lumos::Window>(1280, 720, "test");
     m_window->setUserPtr(&m_eventbus);
     m_rendersystem = std::make_unique<RenderSystem>(*m_window, m_vkconfig);
-    m_movementsystem = std::make_unique<MovementSystem>(m_eventbus);
+    m_movementsystem = std::make_unique<MovementSystem>(m_eventbus, m_scene.ecs());
     m_resourcemanager = std::make_unique<Lumos::ResourceManager>(*m_rendersystem->device());
 
     m_eventbus.subscribe<Lumos::KeyPressEvent>([&](const Lumos::KeyPressEvent& e) {
@@ -49,7 +49,7 @@ Application::Application()
     for (size_t i = 0; i < 10; i++) {
         Entity ent = ecs.createEntity("cube");
         Lumos::Transform t;
-        t.size = glm::vec3(1);
+        t.size = glm::vec3(0.5f);
         t.rotation = 0.0f;
         t.position = glm::vec3(0.0f+i, 0.0f, 0.0f);
         ecs.addComponent(ent, t);

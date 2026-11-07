@@ -187,12 +187,26 @@ namespace Lumos
     void Window::cursorCallback(GLFWwindow* window, double xpos, double ypos)
     {
         auto* eventbus = static_cast<EventBus*>(glfwGetWindowUserPointer(window));
+        static bool firstmouse = true;
+        static float lastx = 0.0f;
+        static float lasty = 0.0f;
+        if (firstmouse) {
+            lastx = xpos;
+            lasty = ypos;
+            firstmouse = false;
+        }
+
+        float xoffset = xpos - lastx;
+        float yoffset = lasty - ypos;
+
         if (eventbus) {
             CursorMoveEvent event;
-            event.x = xpos;
-            event.y = ypos;
+            event.x = xoffset;
+            event.y = yoffset;
             eventbus->publish(event);
         }
+        lastx = xpos;
+        lasty = ypos;
     }
 
     void Window::mouseClickCallback(GLFWwindow* window, int button, int action, int mods)
@@ -203,6 +217,12 @@ namespace Lumos
             event.button = button;
             event.action = action;
             event.mods = mods;
+            if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
+                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            }
+            if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE) {
+                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            }
             eventbus->publish(event);
         }
 

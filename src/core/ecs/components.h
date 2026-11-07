@@ -13,11 +13,15 @@ namespace Lumos
 
     struct Camera
     {
-        glm::vec3 up = glm::vec3(0.0f, 0.0f, 1.0f);
+        glm::vec3 wup; // global up vector ref
+        glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f); //local up direction
+        glm::vec3 right; //local right direction
         glm::vec3 forward = glm::vec3(0.0f, 0.0f, -1.0f);
         float fov;
         float near;
         float far;
+        float yaw = -90.0f;
+        float pitch = 0.0f;
     };
 
     struct CameraUBO

@@ -5,7 +5,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-MovementSystem::MovementSystem(Lumos::EventBus& eventbus)
+MovementSystem::MovementSystem(Lumos::EventBus& eventbus, Ecs& ecs)
 {
     eventbus.subscribe<Lumos::KeyPressEvent>([&](const Lumos::KeyPressEvent& e) {
         if (e.action == GLFW_PRESS) {
@@ -16,17 +16,25 @@ MovementSystem::MovementSystem(Lumos::EventBus& eventbus)
         }
     });
     eventbus.subscribe<Lumos::CursorMoveEvent>([&](const Lumos::CursorMoveEvent& e) {
-        double x = e.x;
-        double u = e.y;
-        // std::println("cursor is moving: {}---{}", x, u);
+        cursorposx = e.x;
+        cursorposy = e.y;
+        if (rightclickpressed) {
+            for (auto ent : ecs.view<Lumos::Camera>()) {
+                auto& cam = ecs.getComponent<Lumos::Camera>(ent);
+                const float sensitivity = 0.1f;
+                cam.yaw += cursorposx * sensitivity;
+                cam.pitch += cursorposy * sensitivity;
+            }
+        }
+        std::println("cursor is moving: {}---{}", e.x, e.y);
     });
     eventbus.subscribe<Lumos::MouseClickEvent>([&](const Lumos::MouseClickEvent& e) {
         if (e.action == GLFW_PRESS) {
-            m_heldkeys.insert(e.button);
+            rightclickpressed = true;
             std::println("cursor is clicked: {}", e.button);
         }
         if (e.action == GLFW_RELEASE) {
-            m_heldkeys.erase(e.button);
+            rightclickpressed = false;
         }
     });
 
@@ -45,18 +53,26 @@ void MovementSystem::update(Ecs& ecs, float dt)
     if (m_heldkeys.count(GLFW_KEY_S)) dy -= 1.0f;
     if (m_heldkeys.count(GLFW_KEY_A)) dx -= 1.0f;
     if (m_heldkeys.count(GLFW_KEY_D)) dx += 1.0f;
-    if (m_heldkeys.count(GLFW_MOUSE_BUTTON_RIGHT)) ;
+    // if (m_heldkeys.count(GLFW_MOUSE_BUTTON_RIGHT)) {
+    //     for (auto ent : ecs.view<Lumos::Camera>()) {
+    //         auto& cam = ecs.getComponent<Lumos::Camera>(ent);
+    //         const float sensitivity = 0.1f;
+    //         cam.yaw += cursorposx * sensitivity;
+    //         cam.pitch += cursorposy * sensitivity;
+    //     }
+    // }
 
-    if (dx == 0.0f && dy == 0.0f) {
-        return;
-    }
+    // if (dx == 0.0f && dy == 0.0f) {
+    //     return;
+    // }
     for (auto ent : ecs.view<Lumos::Camera>()) {
         auto& t = ecs.getComponent<Lumos::Transform>(ent);
         auto& cuo = ecs.getComponent<Lumos::CameraUBO>(ent);
         auto& cam = ecs.getComponent<Lumos::Camera>(ent);
 
-        float yaw = -90.0f;
-        float pitch = 0.0f;
+        float yaw = cam.yaw;
+        float pitch = cam.pitch;
+        pitch = std::clamp(pitch, -89.0f, 89.0f);
         glm::vec3 direction;
         direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
         direction.y = sin(glm::radians(pitch));
