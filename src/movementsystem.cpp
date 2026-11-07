@@ -18,7 +18,16 @@ MovementSystem::MovementSystem(Lumos::EventBus& eventbus)
     eventbus.subscribe<Lumos::CursorMoveEvent>([&](const Lumos::CursorMoveEvent& e) {
         double x = e.x;
         double u = e.y;
-        std::println("cursor is moving: {}---{}", x, u);
+        // std::println("cursor is moving: {}---{}", x, u);
+    });
+    eventbus.subscribe<Lumos::MouseClickEvent>([&](const Lumos::MouseClickEvent& e) {
+        if (e.action == GLFW_PRESS) {
+            m_heldkeys.insert(e.button);
+            std::println("cursor is clicked: {}", e.button);
+        }
+        if (e.action == GLFW_RELEASE) {
+            m_heldkeys.erase(e.button);
+        }
     });
 
 }
@@ -36,6 +45,7 @@ void MovementSystem::update(Ecs& ecs, float dt)
     if (m_heldkeys.count(GLFW_KEY_S)) dy -= 1.0f;
     if (m_heldkeys.count(GLFW_KEY_A)) dx -= 1.0f;
     if (m_heldkeys.count(GLFW_KEY_D)) dx += 1.0f;
+    if (m_heldkeys.count(GLFW_MOUSE_BUTTON_RIGHT)) ;
 
     if (dx == 0.0f && dy == 0.0f) {
         return;
@@ -51,10 +61,10 @@ void MovementSystem::update(Ecs& ecs, float dt)
         direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
         direction.y = sin(glm::radians(pitch));
         direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-        // cam.forward = glm::normalize(direction);
+        cam.forward = glm::normalize(direction);
         t.position += cam.forward * dy * dt;
         t.position += glm::normalize(glm::cross(cam.forward, cam.up)) * dx * dt;
-        std::println("forward: {}x{}x{}",cam.forward.x,cam.forward.y,cam.forward.z);
+        // std::println("forward: {}x{}x{}",cam.forward.x,cam.forward.y,cam.forward.z);
         auto view = lookAt(t.position, t.position + cam.forward, cam.up);
         auto proj = glm::perspective(glm::radians(45.0f),
             16/(float)9,

@@ -7,7 +7,7 @@ namespace Lumos
     struct Transform
     {
         glm::vec3 position;
-        glm::vec2 size;
+        glm::vec3 size;
         float rotation;
     };
 

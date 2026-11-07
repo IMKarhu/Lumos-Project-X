@@ -28,16 +28,15 @@ Application::Application()
     Ecs& ecs = m_scene.ecs();
     Entity player = ecs.createEntity("player");
     Lumos::Transform trans;
-    trans.position = glm::vec3(2.0f);
-    trans.size = glm::vec2({10.0f, 10.0f});
+    trans.position = glm::vec3(0.0f, 0.0f, 2.0f);
+    trans.size = glm::vec3(10.0f);
     trans.rotation = 0.0f;
     Lumos::Camera camera;
-    camera.forward = glm::vec3(-2.0f);
-    camera.up = glm::vec3(0.0f, 0.0f, 1.0f);
-    camera.far = 10.0f;
+    camera.forward = glm::vec3(0.0f, 0.0f, -1.0f);
+    camera.up = glm::vec3(0.0f, 1.0f, 0.0f);
+    camera.far = 100.0f;
     camera.near = 0.1f;
     Lumos::CameraUBO camubo;
-// static_cast<float>(m_window->width()) / static_cast<float>(m_window->height())
     auto view = lookAt(trans.position, trans.position + camera.forward, camera.up);
     auto proj = glm::perspective(glm::radians(45.0f),
             16/(float)9,
@@ -50,12 +49,15 @@ Application::Application()
     for (size_t i = 0; i < 10; i++) {
         Entity ent = ecs.createEntity("cube");
         Lumos::Transform t;
-        t.size = glm::vec2(10, 10);
+        t.size = glm::vec3(1);
         t.rotation = 0.0f;
         t.position = glm::vec3(0.0f+i, 0.0f, 0.0f);
         ecs.addComponent(ent, t);
         Lumos::Model m;
-        m.model = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0f));
+        auto tr = glm::translate(glm::mat4(1.0f), t.position);
+        tr = glm::rotate(tr, glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0f));
+        tr = glm::scale(tr, t.size);
+        m.model = tr;
         ecs.addComponent(ent, m);
         Lumos::Size indexsize;
         indexsize.size = static_cast<uint32_t>(DefaultTypes::Cube::indices.size());
