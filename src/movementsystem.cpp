@@ -26,14 +26,12 @@ MovementSystem::MovementSystem(Lumos::EventBus& eventbus, Ecs& ecs)
                 cam.pitch += cursorposy * sensitivity;
             }
         }
-        std::println("cursor is moving: {}---{}", e.x, e.y);
     });
     eventbus.subscribe<Lumos::MouseClickEvent>([&](const Lumos::MouseClickEvent& e) {
-        if (e.action == GLFW_PRESS) {
+        if (e.action == GLFW_PRESS && e.button == GLFW_MOUSE_BUTTON_RIGHT) {
             rightclickpressed = true;
-            std::println("cursor is clicked: {}", e.button);
         }
-        if (e.action == GLFW_RELEASE) {
+        if (e.action == GLFW_RELEASE && e.button == GLFW_MOUSE_BUTTON_RIGHT) {
             rightclickpressed = false;
         }
     });
@@ -53,18 +51,7 @@ void MovementSystem::update(Ecs& ecs, float dt)
     if (m_heldkeys.count(GLFW_KEY_S)) dy -= 1.0f;
     if (m_heldkeys.count(GLFW_KEY_A)) dx -= 1.0f;
     if (m_heldkeys.count(GLFW_KEY_D)) dx += 1.0f;
-    // if (m_heldkeys.count(GLFW_MOUSE_BUTTON_RIGHT)) {
-    //     for (auto ent : ecs.view<Lumos::Camera>()) {
-    //         auto& cam = ecs.getComponent<Lumos::Camera>(ent);
-    //         const float sensitivity = 0.1f;
-    //         cam.yaw += cursorposx * sensitivity;
-    //         cam.pitch += cursorposy * sensitivity;
-    //     }
-    // }
 
-    // if (dx == 0.0f && dy == 0.0f) {
-    //     return;
-    // }
     for (auto ent : ecs.view<Lumos::Camera>()) {
         auto& t = ecs.getComponent<Lumos::Transform>(ent);
         auto& cuo = ecs.getComponent<Lumos::CameraUBO>(ent);
@@ -80,7 +67,6 @@ void MovementSystem::update(Ecs& ecs, float dt)
         cam.forward = glm::normalize(direction);
         t.position += cam.forward * dy * dt;
         t.position += glm::normalize(glm::cross(cam.forward, cam.up)) * dx * dt;
-        // std::println("forward: {}x{}x{}",cam.forward.x,cam.forward.y,cam.forward.z);
         auto view = lookAt(t.position, t.position + cam.forward, cam.up);
         auto proj = glm::perspective(glm::radians(45.0f),
             16/(float)9,
