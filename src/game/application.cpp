@@ -1,6 +1,5 @@
 #include "application.h"
-#include "ecs/components.h"
-#include "resourcemanager.h"
+#include "renderer/resourcemanager.h"
 #include "renderer/buffer.h"
 #include "defaulttypes.h"
 
@@ -15,7 +14,7 @@ Application::Application()
     m_window = std::make_unique<Lumos::Window>(1280, 720, "test");
     m_window->setUserPtr(&m_eventbus);
     m_rendersystem = std::make_unique<RenderSystem>(*m_window, m_vkconfig);
-    m_movementsystem = std::make_unique<MovementSystem>(m_eventbus, m_scene.ecs());
+    m_movementsystem = std::make_unique<MovementSystem>(m_eventbus);
     m_resourcemanager = std::make_unique<Lumos::ResourceManager>(*m_rendersystem->device());
 
     m_eventbus.subscribe<Lumos::KeyPressEvent>([&](const Lumos::KeyPressEvent& e) {
@@ -25,45 +24,47 @@ Application::Application()
         });
 
 
-    Ecs& ecs = m_scene.ecs();
-    Entity player = ecs.createEntity("player");
-    Lumos::Transform trans;
-    trans.position = glm::vec3(0.0f, 0.0f, 2.0f);
-    trans.size = glm::vec3(10.0f);
-    trans.rotation = 0.0f;
-    Lumos::Camera camera;
-    camera.forward = glm::vec3(0.0f, 0.0f, -1.0f);
-    camera.up = glm::vec3(0.0f, 1.0f, 0.0f);
-    camera.far = 100.0f;
-    camera.near = 0.1f;
-    Lumos::CameraUBO camubo;
-    auto view = lookAt(trans.position, trans.position + camera.forward, camera.up);
-    auto proj = glm::perspective(glm::radians(45.0f),
-            16/(float)9,
-            camera.near, camera.far);
-    proj[1][1] *= -1;
-    camubo.viewproj = proj * view;
-    ecs.addComponent(player, trans);
-    ecs.addComponent(player, camera);
-    ecs.addComponent(player, camubo);
-    for (size_t i = 0; i < 10; i++) {
-        Entity ent = ecs.createEntity("cube");
-        Lumos::Transform t;
-        t.size = glm::vec3(0.5f);
-        t.rotation = 0.0f;
-        t.position = glm::vec3(0.0f+i, 0.0f, 0.0f);
-        ecs.addComponent(ent, t);
-        Lumos::Model m;
-        auto tr = glm::translate(glm::mat4(1.0f), t.position);
-        tr = glm::rotate(tr, glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0f));
-        tr = glm::scale(tr, t.size);
-        m.model = tr;
-        ecs.addComponent(ent, m);
-        Lumos::Size indexsize;
-        indexsize.size = static_cast<uint32_t>(DefaultTypes::Cube::indices.size());
-        ecs.addComponent(ent, indexsize);
-        std::println("creating cube");
-    }
+    // Ecs& ecs = m_scene.ecs();
+    // Entity player = ecs.createEntity("player");
+    // Lumos::Transform trans;
+    // trans.position = glm::vec3(0.0f, 0.0f, 2.0f);
+    // trans.size = glm::vec3(10.0f);
+    // trans.rotation = 0.0f;
+    // Lumos::Camera camera;
+    // camera.forward = glm::vec3(0.0f, 0.0f, -1.0f);
+    // camera.up = glm::vec3(0.0f, 1.0f, 0.0f);
+    // camera.far = 100.0f;
+    // camera.near = 0.1f;
+    // Lumos::CameraUBO camubo;
+    // auto view = lookAt(trans.position, trans.position + camera.forward, camera.up);
+    // auto proj = glm::perspective(glm::radians(45.0f),
+    //         16/(float)9,
+    //         camera.near, camera.far);
+    // proj[1][1] *= -1;
+    // camubo.viewproj = proj * view;
+    // ecs.addComponent(player, trans);
+    // ecs.addComponent(player, camera);
+    // ecs.addComponent(player, camubo);
+    // for (size_t i = 0; i < 50; i++) {
+    //     for (size_t j = 0; j < 50; j++) {
+    //         Entity ent = ecs.createEntity("cube");
+    //         Lumos::Transform t;
+    //         t.size = glm::vec3(1.0f);
+    //         t.rotation = 0.0f;
+    //         t.position = glm::vec3(0.0f+i, 0.0f, 0.0f-j);
+    //         ecs.addComponent(ent, t);
+    //         Lumos::Model m;
+    //         auto tr = glm::translate(glm::mat4(1.0f), t.position);
+    //         tr = glm::rotate(tr, glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0f));
+    //         tr = glm::scale(tr, t.size);
+    //         m.model = tr;
+    //         ecs.addComponent(ent, m);
+    //         Lumos::Size indexsize;
+    //         indexsize.size = static_cast<uint32_t>(DefaultTypes::Cube::indices.size());
+    //         ecs.addComponent(ent, indexsize);
+    //         std::println("creating cube");
+    //     }
+    // }
     initializeResources();
     m_rendersystem->createRenderers(*m_resourcemanager, m_vkconfig);
 }
@@ -93,8 +94,8 @@ void Application::run()
             framecount = 0.0f;
             timeaccumulator = 0.0f;
         }
-        m_movementsystem->update(m_scene.ecs(), dt);
-        m_rendersystem->update(m_scene.ecs(), *m_resourcemanager, dt);
+        // m_movementsystem->update(m_scene.ecs(), dt);
+        // m_rendersystem->update(m_scene.ecs(), *m_resourcemanager, dt);
     }
     m_rendersystem->waitForDestroy();
 // #endif
@@ -175,11 +176,3 @@ void Application::initializeResources()
     m_resourcemanager->create("presentation", presentationpool, presentationbindings, m_vkconfig.framesinflight);
 }
 
-namespace IsometricProjection
-{
-    glm::vec2 gridToWorld(glm::ivec2 gridposition)
-    {
-        return { gridposition.x - gridposition.y, (gridposition.x + gridposition.y) * 0.5f };
-    }
-
-}

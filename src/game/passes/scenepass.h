@@ -1,6 +1,6 @@
 #pragma once
 #include "renderer/device.h"
-#include "resourcemanager.h"
+#include "renderer/resourcemanager.h"
 #include "renderer/pipeline.h"
 #include "passconfig.h"
 

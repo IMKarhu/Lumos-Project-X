@@ -8,11 +8,6 @@ namespace Lumos
 
     }
 
-    Ecs& Scene::ecs()
-    {
-        return m_ecs;
-    }
-
     GameState Scene::gamestate() const
     {
         return m_gamestate;

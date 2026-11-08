@@ -1,18 +1,7 @@
 #pragma once
-#include "ecs/ecs.h"
 
 #include <string>
 #include <string_view>
-
-#ifdef _WIN32
-    #ifdef CORE_EXPORT
-    #define CORE_API __declspec(dllexport)
-    #else
-    #define CORE_API __declspec(dllimport)
-    #endif
-#else
-    #define CORE_API
-#endif
 
 namespace Lumos
 {
@@ -23,14 +12,12 @@ namespace Lumos
         Playing
     };
 
-    class CORE_API Scene
+    class Scene
     {
     public:
         Scene(const std::string_view name = "scene");
-        [[nodiscard]] Ecs& ecs();
         [[nodiscard]] GameState gamestate() const;
     private:
-        Ecs m_ecs;
         std::string m_name;
         GameState m_gamestate;
     };

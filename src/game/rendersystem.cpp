@@ -1,9 +1,8 @@
 #include "rendersystem.h"
 #include "windowing/window.h"
 #include "renderer/device.h"
-#include "resourcemanager.h"
+#include "renderer/resourcemanager.h"
 #include "renderer/buffer.h"
-#include "ecs/ecs.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <cstring>
@@ -46,22 +45,22 @@ void RenderSystem::createRenderers(Lumos::ResourceManager& manager, Lumos::Vulka
     m_scenepass = ScenePass::create(*m_device, sceneconfig);
 }
 
-void RenderSystem::update(Ecs& ecs, Lumos::ResourceManager& manager, float dt)
+void RenderSystem::update(Lumos::ResourceManager& manager, float dt)
 {
     auto frameinfo = m_device->startFrame();
-    for (auto ent : ecs.view<Lumos::Camera>()) {
-        auto& c = ecs.getComponent<Lumos::CameraUBO>(ent);
-        std::memcpy(manager.getBufferByNameAndIndex("global ubos", frameinfo.frameindex)->mappeddata(), &c, sizeof(c));
-    }
+    // for (auto ent : ecs.view<Lumos::Camera>()) {
+    //     auto& c = ecs.getComponent<Lumos::CameraUBO>(ent);
+    //     std::memcpy(manager.getBufferByNameAndIndex("global ubos", frameinfo.frameindex)->mappeddata(), &c, sizeof(c));
+    // }
 
     auto globalset = manager.getSetByNameAndIndex("global", frameinfo.frameindex);
     m_terrainpass.begin(frameinfo, manager);
-    for (auto ent : ecs.view<Lumos::Size>()) {
-        auto& s = ecs.getComponent<Lumos::Size>(ent);
-        auto& p = ecs.getComponent<Lumos::Model>(ent);
-        m_terrainpass.submit(s.size, p.model);
-        frameinfo.pushcst.model = p.model;
-    }
+    // for (auto ent : ecs.view<Lumos::Size>()) {
+    //     auto& s = ecs.getComponent<Lumos::Size>(ent);
+    //     auto& p = ecs.getComponent<Lumos::Model>(ent);
+    //     m_terrainpass.submit(s.size, p.model);
+    //     frameinfo.pushcst.model = p.model;
+    // }
     m_terrainpass.end(frameinfo, manager);
 
     m_scenepass.begin(frameinfo);

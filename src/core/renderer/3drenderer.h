@@ -5,22 +5,12 @@
 #include "sampler.h"
 #include "image.h"
 
-#ifdef _WIN32
-    #ifdef CORE_EXPORT
-    #define CORE_API __declspec(dllexport)
-    #else
-    #define CORE_API __declspec(dllimport)
-    #endif
-#else
-    #define CORE_API
-#endif
-
 namespace Lumos
 {
     class Image;
     class Sampler;
     class Buffer;
-    class CORE_API DRenderer : public RendererBase
+    class DRenderer : public RendererBase
     {
     public:
         //Horrible name for a struct, but didnt come up with a better one

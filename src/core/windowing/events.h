@@ -73,7 +73,20 @@ namespace Lumos
         bool m_framebufferresized = false;
     };
 
+    /*
+     * x and y are in -1 - 1 range
+     */
     struct CursorMoveEvent : public Event
+    {
+        double x;
+        double y;
+        void dispatch(EventBus& bus) const override
+        {
+            bus.publish(*this);
+        }
+    };
+
+    struct CursorMoveRawEvent : public Event
     {
         double x;
         double y;

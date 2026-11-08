@@ -1,0 +1,9 @@
+target_sources(lumos_core
+    PUBLIC
+        components/cameracomponent.h
+        components/component.h
+        components/componentevents.h
+        components/componenttypeid.h
+        components/transformcomponent.h
+        entity.h
+)

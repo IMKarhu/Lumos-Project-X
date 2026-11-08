@@ -1,7 +1,6 @@
 #pragma once
 #include <unordered_set>
 
-class Ecs;
 namespace Lumos
 {
     class EventBus;
@@ -10,9 +9,9 @@ namespace Lumos
 class MovementSystem
 {
 public:
-    MovementSystem(Lumos::EventBus& eventbus, Ecs& ecs);
+    MovementSystem(Lumos::EventBus& eventbus);
     ~MovementSystem();
-    void update(Ecs& ecs, float dt);
+    void update(float dt);
 private:
     std::unordered_set<int> m_heldkeys;
     bool rightclickpressed = false;

@@ -1,8 +1,8 @@
 #pragma once
 #include "windowing/window.h"
 #include "windowing/events.h"
-#include "scene.h"
-#include "resourcemanager.h"
+#include "renderer/scene.h"
+#include "renderer/resourcemanager.h"
 #include "rendersystem.h"
 #include "movementsystem.h"
 #include "tilemap.h"
@@ -31,8 +31,3 @@ private:
         .validationlayers = true
     };
 };
-
-namespace IsometricProjection
-{
-    glm::vec2 gridToWorld(glm::ivec2 gridposition);
-}

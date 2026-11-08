@@ -11,14 +11,13 @@ namespace Lumos
     class Window;
 }
 
-class Ecs;
 class RenderSystem
 {
 public:
     RenderSystem(Lumos::Window& window, Lumos::VulkanConfig config);
     ~RenderSystem();
     void createRenderers(Lumos::ResourceManager& manager, Lumos::VulkanConfig config);
-    void update(Ecs& ecs, Lumos::ResourceManager& manager, float dt);
+    void update(Lumos::ResourceManager& manager, float dt);
     void waitForDestroy();
     Lumos::Device* device()const;
 private:

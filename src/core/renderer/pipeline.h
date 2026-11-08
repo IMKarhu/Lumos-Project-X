@@ -4,17 +4,6 @@
 #include <vector>
 #include <span>
 
-#ifdef _WIN32
-    #ifdef CORE_EXPORT
-    #define CORE_API __declspec(dllexport)
-    #else
-    #define CORE_API __declspec(dllimport)
-    #endif
-#else
-    #define CORE_API
-#endif
-
-
 namespace Lumos
 {
     struct GraphicsPipelineDescription {
@@ -39,7 +28,7 @@ namespace Lumos
 
     class Device;
 
-    class CORE_API GraphicsPipeline
+    class GraphicsPipeline
     {
     public:
         GraphicsPipeline() = default;
@@ -68,7 +57,7 @@ namespace Lumos
         void destroy();
     };
 
-    std::vector<char> CORE_API readFile(const std::string& filename);
-    VkShaderModule CORE_API shaderModule(const std::vector<char>& buffer, VkDevice device);
+    std::vector<char> readFile(const std::string& filename);
+    VkShaderModule shaderModule(const std::vector<char>& buffer, VkDevice device);
 
 } //namespace Lumos

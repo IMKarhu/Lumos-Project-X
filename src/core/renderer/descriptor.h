@@ -4,17 +4,6 @@
 #include <vector>
 #include <unordered_map>
 
-#ifdef _WIN32
-    #ifdef CORE_EXPORT
-    #define CORE_API __declspec(dllexport)
-    #else
-    #define CORE_API __declspec(dllimport)
-    #endif
-#else
-    #define CORE_API
-#endif
-
-
 namespace Lumos
 {
 
@@ -46,7 +35,7 @@ namespace Lumos
     };
 
     class Device;
-    class CORE_API DescriptorLayout
+    class DescriptorLayout
     {
     public:
         DescriptorLayout(Device& device, std::span<const BindingConfig> bindings);
@@ -64,7 +53,7 @@ namespace Lumos
         VkDescriptorSetLayout m_layout = VK_NULL_HANDLE;
     };
 
-    class CORE_API DescriptorPool
+    class DescriptorPool
     {
     public:
         DescriptorPool(Device& device, std::span<const PoolConfig> poolsizes, uint32_t maxsets);
@@ -85,7 +74,7 @@ namespace Lumos
     class Buffer;
     class Image;
     class Sampler;
-    class CORE_API DescriptorWriter
+    class DescriptorWriter
     {
     public:
         enum BufferType

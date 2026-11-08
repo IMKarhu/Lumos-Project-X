@@ -204,6 +204,10 @@ namespace Lumos
             event.x = xoffset;
             event.y = yoffset;
             eventbus->publish(event);
+            CursorMoveRawEvent rawevent;
+            rawevent.x = xpos;
+            rawevent.y = ypos;
+            eventbus->publish(rawevent);
         }
         lastx = xpos;
         lasty = ypos;

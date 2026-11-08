@@ -168,7 +168,8 @@ TerrainPass TerrainPass::create(Lumos::Device& device, PassConfig config)
         vertexShaderStageCI,
         fragmentShaderStageCI
     };
-    desc.vertexbindings.push_back(Lumos::Vertex::bindingDescription());
+    desc.vertexbindings.push_back(Lumos::Vertex::bindingDescription(0, VK_VERTEX_INPUT_RATE_VERTEX));
+    desc.vertexbindings.push_back(Lumos::Vertex::bindingDescription(1, VK_VERTEX_INPUT_RATE_INSTANCE));
     desc.vertexattributes = Lumos::Vertex::attributeDescription();
     desc.colorformat = config.colorformat;
     desc.descriptorlayouts = config.layouts;

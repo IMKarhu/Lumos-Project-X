@@ -7,16 +7,6 @@
 #include <string>
 #include <filesystem>
 
-#ifdef _WIN32
-    #ifdef CORE_EXPORT
-    #define CORE_API __declspec(dllexport)
-    #else
-    #define CORE_API __declspec(dllimport)
-    #endif
-#else
-    #define CORE_API
-#endif
-
 namespace Lumos
 {
     enum class BufferType
@@ -29,7 +19,7 @@ namespace Lumos
     class Buffer;
     class Texture;
     class Image;
-    class CORE_API ResourceManager
+    class ResourceManager
     {
     public:
         explicit ResourceManager(Device& device);

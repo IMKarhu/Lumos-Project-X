@@ -6,12 +6,12 @@ namespace Lumos
 {
     struct Vertex {
         glm::vec3 position;
-        glm::vec3 color;
+        glm::vec3 normals;
         // glm::vec2 texcoord;
 
-        static VkVertexInputBindingDescription bindingDescription()
+        static VkVertexInputBindingDescription bindingDescription(uint32_t binding, VkVertexInputRate inputrate)
         {
-            return {.binding = 0, .stride = sizeof(Vertex), .inputRate = VK_VERTEX_INPUT_RATE_VERTEX};
+            return {.binding = binding, .stride = sizeof(Vertex), .inputRate = inputrate};
         }
 
         static std::vector<VkVertexInputAttributeDescription> attributeDescription()
@@ -25,7 +25,7 @@ namespace Lumos
             description[1].binding = 0;
             description[1].location = 1;
             description[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-            description[1].offset = offsetof(Vertex, color);
+            description[1].offset = offsetof(Vertex, normals);
 
             // description[2].binding = 0;
             // description[2].location = 2;
