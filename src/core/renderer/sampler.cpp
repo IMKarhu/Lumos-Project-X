@@ -28,10 +28,10 @@ namespace Lumos
     }
 
     Sampler::Sampler(Device& device, SamplerConfig config)
-        : m_device(&device)
+        : m_device(device)
     {
         VkPhysicalDeviceProperties pdeviceproperties{};
-        vkGetPhysicalDeviceProperties(m_device->pdevice(), &pdeviceproperties);
+        vkGetPhysicalDeviceProperties(m_device.pdevice(), &pdeviceproperties);
 
         VkSamplerCreateInfo samplerinfo {
             .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
@@ -50,35 +50,14 @@ namespace Lumos
             .borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK,
             .unnormalizedCoordinates = VK_FALSE
         };
-        VK_CHECK(vkCreateSampler(m_device->device(), &samplerinfo, nullptr, &m_sampler));
+        VK_CHECK(vkCreateSampler(m_device.device(), &samplerinfo, nullptr, &m_sampler));
     }
 
     Sampler::~Sampler()
     {
         if (m_sampler != VK_NULL_HANDLE) {
-            vkDestroySampler(m_device->device(), m_sampler, nullptr);
+            vkDestroySampler(m_device.device(), m_sampler, nullptr);
         }
-    }
-
-    Sampler::Sampler(Sampler&& other) noexcept
-        : m_device(other.m_device)
-        , m_sampler(std::exchange(other.m_sampler, VK_NULL_HANDLE))
-    {
-    }
-
-    Sampler& Sampler::operator=(Sampler&& other) noexcept
-    {
-        if (&other == this) {
-            return *this;
-        }
-        if (m_sampler != VK_NULL_HANDLE) {
-            vkDestroySampler(m_device->device(), m_sampler, nullptr);
-        }
-
-        m_device = std::exchange(other.m_device, nullptr);
-        m_sampler = std::exchange(other.m_sampler, VK_NULL_HANDLE);
-
-        return *this;
     }
 
     VkSampler Sampler::sampler() const

@@ -40,36 +40,6 @@ namespace Lumos
         VK_CHECK(vkBindBufferMemory(m_device->device(), m_buffer, m_buffermemory, 0));
     }
 
-    Buffer::Buffer(Buffer&& other) noexcept
-        : m_device(other.m_device)
-        , m_buffer(std::exchange(other.m_buffer, VK_NULL_HANDLE))
-        , m_buffermemory(std::exchange(other.m_buffermemory, VK_NULL_HANDLE))
-        , m_size(std::exchange(other.m_size, 0))
-    {
-        other.m_device = nullptr;
-    }
-
-    Buffer& Buffer::operator=(Buffer&& other) noexcept
-    {
-        if (&other == this) {
-            return *this;
-        }
-        if (m_buffer != VK_NULL_HANDLE) {
-            vkDestroyBuffer(m_device->device(), m_buffer, nullptr);
-        }
-        if (m_buffermemory != VK_NULL_HANDLE) {
-            vkFreeMemory(m_device->device(), m_buffermemory, nullptr);
-        }
-
-        m_device = std::exchange(other.m_device, nullptr);
-        m_buffer = std::exchange(other.m_buffer, VK_NULL_HANDLE);
-        m_buffermemory = std::exchange(other.m_buffermemory, VK_NULL_HANDLE);
-        m_size = std::exchange(other.m_size, 0);
-
-        return *this;
-    }
-
-
     Buffer::~Buffer()
     {
         vkDestroyBuffer(m_device->device(), m_buffer, nullptr);

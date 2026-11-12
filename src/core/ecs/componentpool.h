@@ -48,9 +48,12 @@ namespace ECS {
                 size_t last = m_components.size() - 1;
                 Entity lastEnt = m_entities.at(last);
 
-                m_components[index] = std::move(m_components.at(last));
-                m_entities[index] = lastEnt;
-                m_entityToIndex[lastEnt] = index;
+                if (index != last) {
+                    m_components[index] = std::move(m_components.at(last));
+                    m_entities[index] = lastEnt;
+                    m_entityToIndex[lastEnt] = index;
+                }
+
 
                 m_components.pop_back();
                 m_entities.pop_back();

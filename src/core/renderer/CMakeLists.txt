@@ -1,33 +1,32 @@
 target_sources(lumos_core
     PUBLIC
-        renderfactory.h
         errorcheck.h
-        utils.h
+        renderer.h
+        renderer.cpp
+        swapchain.h
+        swapchain.cpp
         device.h
         device.cpp
-        commandpool.h
-        commandpool.cpp
         pipeline.h
         pipeline.cpp
         buffer.h
         buffer.cpp
-        swapchain.h
-        swapchain.cpp
         image.h
         image.cpp
         sampler.h
         sampler.cpp
-        texture.h
-        texture.cpp
-        descriptor.h
-        descriptor.cpp
-        vertex.h
-        baserenderer.h
-        resourcemanager.h
-        resourcemanager.cpp
-        json.hpp
-        scene.h
-        scene.cpp
+        # commandpool.h
+        # commandpool.cpp
+        # renderfactory.h
+        # texture.h
+        # texture.cpp
+        # descriptor.h
+        # descriptor.cpp
+        # vertex.h
+        # baserenderer.h
+        # json.hpp
+        # scene.h
+        # scene.cpp
 )
 
 

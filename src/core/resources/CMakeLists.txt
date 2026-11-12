@@ -1,0 +1,10 @@
+target_sources(lumos_core
+    PUBLIC
+        resource.cpp
+        resource.h
+        resourcehandle.h
+        resourcemanager.cpp
+        resourcemanager.h
+        texture.cpp
+        texture.h
+)

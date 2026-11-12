@@ -6,6 +6,7 @@
 #include <memory>
 #include <glm/glm.hpp>
 
+#include "rendererconfig.h"
 namespace Lumos
 {
 
@@ -27,115 +28,70 @@ namespace Lumos
         std::vector<VkPresentModeKHR> presentModes;
     };
 
-    struct VulkanConfig
-    {
-        uint32_t framesinflight = 2;
-        bool validationlayers = false;
-    };
-
-    struct PushConstant
-    {
-        glm::mat4 model;
-    };
-
-
-
     class Window;
-    class SwapChain;
-    class CommandPool;
     class Buffer;
     class Device
     {
     public:
-        struct FrameInfo
-        {
-            uint32_t imageindex;
-            uint32_t frameindex;
-            VkCommandBuffer cmdbuf;
-            VkDescriptorSet set;
-            //currently just for swapchain usage
-            VkImage image;
-            VkImageView imageview;
-            VkExtent2D extent;
-            VkImage offscreenimage;
-            VkSampler offscreensampler;
-            PushConstant pushcst;
-        };
 
-        Device(Window& window, VulkanConfig config);
+        explicit Device(Window& window, const RendererConfig config = {});
         ~Device();
 
         Device(const Device&) = delete;
         Device operator=(const Device&) = delete;
 
-        Device(Device&& other) noexcept;
-        Device& operator=(Device&& other) noexcept;
-
-        FrameInfo startFrame();
-        void endFrame(FrameInfo frameinfo);
-        void waitForDestroy();
-        [[nodiscard]] VkDevice device() const;
-        [[nodiscard]] VkPhysicalDevice pdevice() const;
-        [[nodiscard]] VkSurfaceKHR surface() const;
-        [[nodiscard]] VkQueue graphqueue() const;
-        [[nodiscard]] VkQueue presentqueue() const;
-        [[nodiscard]] VkFormat defaultformat() const;
+        VkDevice device() const;
+        VkPhysicalDevice pdevice() const;
+        VkSurfaceKHR surface() const;
+        VkQueue graphicsQueue() const;
+        VkQueue presentQueue() const;
 
         QueueFamilyIndices findQueueFamilies(VkPhysicalDevice pdevice);
-        uint32_t findMemoryType(uint32_t typefilter, VkMemoryPropertyFlags flags);
-        VkFormat findSupportedFormat(const std::vector<VkFormat>& formats,
-                                     VkImageTiling tiling,
-                                     VkFormatFeatureFlags flags);
-        VkFormat depthformat();
         SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice pdevice);
-        bool stenchilComponent(VkFormat format);
-        VkCommandBuffer beginSingleTimeCommands();
-        void endSingleTimeCommands(VkCommandBuffer cmdbuf);
-        void copyBuffers(Buffer& srcBuffer, Buffer& dstBuffer, VkDeviceSize size);
-        void copyBufferToImage(Buffer& buffer, VkImage image, uint32_t width, uint32_t height);
-        void transitionImageLayout(VkImage image,
-                                   VkCommandBuffer cmdbuf,
-                                   VkImageLayout oldlayout,
-                                   VkImageLayout newlayout,
-                                   VkPipelineStageFlags2 srcstagemask,
-                                   VkPipelineStageFlags2 dststagemask,
-                                   VkAccessFlags2 srcaccessmask,
-                                   VkAccessFlags2 dstaccessmask,
-                                   VkImageAspectFlags aspectflags);
-        void transitionImageLayout2(VkImage image,
-                                    VkFormat format,
-                                    VkImageLayout oldlayout,
-                                    VkImageLayout newlayout);
+        uint32_t findMemoryType(uint32_t typefilter, VkMemoryPropertyFlags flags);
 
-
-
+        // VkFormat findSupportedFormat(const std::vector<VkFormat>& formats,
+        //                              VkImageTiling tiling,
+        //                              VkFormatFeatureFlags flags);
+        // VkFormat depthformat();
+        // bool stenchilComponent(VkFormat format);
+        // VkCommandBuffer beginSingleTimeCommands();
+        // void endSingleTimeCommands(VkCommandBuffer cmdbuf);
+        // void copyBuffers(Buffer& srcBuffer, Buffer& dstBuffer, VkDeviceSize size);
+        // void copyBufferToImage(Buffer& buffer, VkImage image, uint32_t width, uint32_t height);
+        // void transitionImageLayout(VkImage image,
+        //                            VkCommandBuffer cmdbuf,
+        //                            VkImageLayout oldlayout,
+        //                            VkImageLayout newlayout,
+        //                            VkPipelineStageFlags2 srcstagemask,
+        //                            VkPipelineStageFlags2 dststagemask,
+        //                            VkAccessFlags2 srcaccessmask,
+        //                            VkAccessFlags2 dstaccessmask,
+        //                            VkImageAspectFlags aspectflags);
+        // void transitionImageLayout2(VkImage image,
+        //                             VkFormat format,
+        //                             VkImageLayout oldlayout,
+        //                             VkImageLayout newlayout);
     private:
         Window& m_window;
-        bool m_validationlayer = false;
-        uint32_t m_maxframesinflight = 2;
-        uint32_t frameindex = 0;
-        VkDebugUtilsMessengerEXT m_debugmessenger = VK_NULL_HANDLE;
+        bool createInstance();
+        bool createSurface();
+        void pickPhysicalDevice();
+        void createLogicalDevice();
+        bool deviceSuitable(VkPhysicalDevice pdevice);
+
+        RendererConfig m_config;
         VkInstance m_instance = VK_NULL_HANDLE;
         VkSurfaceKHR m_surface = VK_NULL_HANDLE;
         VkDevice m_device = VK_NULL_HANDLE;
         VkPhysicalDevice m_physicaldevice = VK_NULL_HANDLE;
         VkQueue m_graphicsqueue = VK_NULL_HANDLE;
         VkQueue m_presentqueue = VK_NULL_HANDLE;
-
-        std::unique_ptr<SwapChain> m_swapchain;
-        std::unique_ptr<CommandPool> m_commandpool;
-        std::vector<VkCommandBuffer> m_commandbuffers;
-
-        std::vector<VkSemaphore> m_presentSemaphores;
-        std::vector<VkSemaphore> m_finishedSemaphores;
-        std::vector<VkFence> m_fences;
-
-
-        bool deviceSuitable(VkPhysicalDevice pdevice);
+        VkDebugUtilsMessengerEXT m_debugmessenger = VK_NULL_HANDLE;
         bool checkDeviceExtensionSupport(VkPhysicalDevice pdevice);
-        bool checkValidationSupport();
-        std::vector<const char*> requiredExtensions();
-        void setupDebugging();
-        void recreateSwapchain();
+        bool checkValidationSupport() const;
+        void createDebugMessenger();
+
+
     };
 } //namespace Lumos

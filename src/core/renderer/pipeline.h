@@ -4,60 +4,46 @@
 #include <vector>
 #include <span>
 
+#include <glm/glm.hpp>
 namespace Lumos
 {
-    struct GraphicsPipelineDescription {
-        std::vector<VkPipelineShaderStageCreateInfo> shaderstages;
-        std::vector<VkVertexInputBindingDescription> vertexbindings;
-        std::vector<VkVertexInputAttributeDescription> vertexattributes;
-        std::span<const VkDescriptorSetLayout> descriptorlayouts;
-        VkPrimitiveTopology topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-        VkPolygonMode polygonmode = VK_POLYGON_MODE_FILL;
-        VkCullModeFlags cullmode = VK_CULL_MODE_NONE;//OR FOR NOW VK_CULL_MODE_NONE VK_CULL_MODE_BACK_BIT
-        VkFrontFace frontface = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-        bool depthtest = true;
-        bool depthwrite = true;
-        bool dynamicviewport = true;
-        bool dynamicscissor = true;
-        VkFormat colorformat = VK_FORMAT_UNDEFINED;
-        VkFormat depthformat = VK_FORMAT_UNDEFINED;
-        VkBlendFactor dstalphablendfactor = VK_BLEND_FACTOR_ZERO; 
-        uint32_t pushconstantcount = 0;
-        std::vector<VkPushConstantRange> pushconstantranges;
-    };
 
+    /*
+     * Forward Declarations
+     */
     class Device;
 
     class GraphicsPipeline
     {
     public:
-        GraphicsPipeline() = default;
+        GraphicsPipeline(Device& device,
+                VkDescriptorSetLayout camerasetlayout,
+                VkDescriptorSetLayout entitysetlayout,
+                VkDescriptorSetLayout texturesetlayout, 
+                VkFormat colorformat = VK_FORMAT_B8G8R8A8_SRGB);
         ~GraphicsPipeline();
 
         GraphicsPipeline(const GraphicsPipeline&) = delete;
         GraphicsPipeline operator=(const GraphicsPipeline&) = delete;
 
-        GraphicsPipeline(GraphicsPipeline&& other) noexcept;
-        GraphicsPipeline& operator=(GraphicsPipeline&& other) noexcept;
-
         [[nodiscard]] VkPipeline pipeline() const noexcept;
-        [[nodiscard]] VkPipelineLayout layout() const noexcept;
-
-        explicit operator bool() const
-        {
-            return m_pipeline != VK_NULL_HANDLE;
-        }
-
-        static GraphicsPipeline create(Device& device, const GraphicsPipelineDescription& desc);
-
+        VkPipelineLayout layout() const noexcept;
+        void createPipeline(const std::string& shaderpath);
+        void bind(VkCommandBuffer cmdbuf);
     private:
-        Device* m_device = nullptr;
+        void createPipelineLayout();
+        VkShaderModule shaderModule(const std::vector<char>& buffer, VkDevice device);
+        Device& m_device;
         VkPipeline m_pipeline = VK_NULL_HANDLE;
         VkPipelineLayout m_layout = VK_NULL_HANDLE;
-        void destroy();
+        VkDescriptorSetLayout m_camerasetlayout = VK_NULL_HANDLE;
+        VkDescriptorSetLayout m_entitysetlayout = VK_NULL_HANDLE;
+        VkDescriptorSetLayout m_texturesetlayout = VK_NULL_HANDLE;
+
+        VkFormat m_colorformat = VK_FORMAT_B8G8R8A8_SRGB;
+
+
+
     };
-
     std::vector<char> readFile(const std::string& filename);
-    VkShaderModule shaderModule(const std::vector<char>& buffer, VkDevice device);
-
 } //namespace Lumos

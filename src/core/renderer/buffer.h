@@ -7,6 +7,7 @@ namespace Lumos
     class Buffer
     {
     public:
+        Buffer() = default;
         Buffer(Device& device,
                VkDeviceSize buffersize,
                VkBufferUsageFlags usageflags,
@@ -16,9 +17,6 @@ namespace Lumos
 
         Buffer(const Buffer&) = delete;
         Buffer& operator=(const Buffer&) = delete;
-
-        Buffer(Buffer&& other) noexcept;
-        Buffer& operator=(Buffer&& other) noexcept;
 
         [[nodiscard]] VkBuffer buffer() const noexcept;
         [[nodiscard]] VkDeviceSize bufferSize() const noexcept;

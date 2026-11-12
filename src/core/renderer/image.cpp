@@ -2,7 +2,6 @@
 #include "device.h"
 #include "errorcheck.h"
 #include <cassert>
-#include <utility>
 
 namespace Lumos
 {
@@ -78,37 +77,6 @@ namespace Lumos
             vkFreeMemory(m_device->device(), m_memory, nullptr);
         }
 
-    }
-
-    Image::Image(Image&& other) noexcept
-        : m_device(other.m_device)
-        , m_image(std::exchange(other.m_image, VK_NULL_HANDLE))
-        , m_memory(std::exchange(other.m_memory, VK_NULL_HANDLE))
-        , m_imageview(std::exchange(other.m_imageview, VK_NULL_HANDLE))
-    {
-    }
-
-    Image& Image::operator=(Image&& other) noexcept
-    {
-        assert(0 && "TODO: IMPLEMENT THIS");
-        if (&other == this) {
-            return *this;
-        }
-        if (m_imageview != VK_NULL_HANDLE) {
-            vkDestroyImageView(m_device->device(), m_imageview, nullptr);
-        }
-        if (m_image != VK_NULL_HANDLE) {
-            vkDestroyImage(m_device->device(), m_image, nullptr);
-        }
-        if (m_memory != VK_NULL_HANDLE) {
-            vkFreeMemory(m_device->device(), m_memory, nullptr);
-        }
-
-        m_device = std::exchange(other.m_device, nullptr);
-        m_image = std::exchange(other.m_image, VK_NULL_HANDLE);
-        m_memory = std::exchange(other.m_memory, VK_NULL_HANDLE);
-        m_imageview = std::exchange(other.m_imageview, VK_NULL_HANDLE);
-        return *this;
     }
 
     VkImage Image::image() const

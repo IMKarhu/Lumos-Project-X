@@ -21,9 +21,6 @@ namespace Lumos
         Image(const Image&) = delete;
         Image& operator=(const Image&) = delete;
 
-        Image(Image&& other) noexcept;
-        Image& operator=(Image&& other) noexcept;
-
         [[nodiscard]] VkImage image() const;
         [[nodiscard]] VkImageView imageview() const;
 

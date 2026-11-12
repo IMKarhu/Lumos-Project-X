@@ -5,5 +5,6 @@ int main()
 {
     std::cout << "hello world" << std::endl;
     Application app;
+    app.initEngine();
     app.run();
 }

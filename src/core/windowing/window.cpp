@@ -1,124 +1,65 @@
 #include "window.h"
 #include "events.h"
-#include <print>
 
 namespace Lumos
 {
-    Window::Window()
-    {
-        m_windowdata = {
-            .m_width = 600,
-            .m_height = 400,
-            .m_title = "Lumos engine test."
-        };
-
-        if(!glfwInit()) {
-            std::println("Failed to initialize GLFW");
-            return ;
-        }
-
-        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-
-        m_window = glfwCreateWindow(m_windowdata.m_width, m_windowdata.m_height, m_windowdata.m_title.c_str(), nullptr, nullptr);
-        if(!m_window) {
-            std::println("failed to create window context");
-            glfwTerminate();
-            return ;
-        }
-        glfwMakeContextCurrent(m_window);
-        // glfwSwapInterval(0);
-        // glfwSetWindowUserPointer(m_window, &m_windowdata);
-        glfwSetFramebufferSizeCallback(m_window, framebufferCallback);
-        glfwSetKeyCallback(m_window, keyCallback);
-        glfwSetCursorPosCallback(m_window, cursorCallback);
-        glfwSetMouseButtonCallback(m_window, mouseClickCallback);
-    }
-
-    Window::Window(uint32_t width, uint32_t height, std::string title)
-        :m_windowdata(width, height, title)
-    {
-        m_windowdata = {
-            .m_width = width,
-            .m_height = height,
-            .m_title = title
-        };
-
-        if(!glfwInit()) {
-            std::println("Failed to initialize GLFW");
-            return ;
-        }
-
-        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-
-        m_window = glfwCreateWindow(m_windowdata.m_width, m_windowdata.m_height, m_windowdata.m_title.c_str(), nullptr, nullptr);
-        if(!m_window) {
-            std::println("failed to create window context");
-            glfwTerminate();
-            return ;
-        }
-        glfwMakeContextCurrent(m_window);
-        // glfwSwapInterval(0);
-        // glfwSetWindowUserPointer(m_window, &m_windowdata);
-        glfwSetFramebufferSizeCallback(m_window, framebufferCallback);
-        glfwSetKeyCallback(m_window, keyCallback);
-        glfwSetCursorPosCallback(m_window, cursorCallback);
-        glfwSetMouseButtonCallback(m_window, mouseClickCallback);
-
-    }
-
     Window::~Window()
     {
         glfwDestroyWindow(m_window);
         glfwTerminate();
     };
 
+    bool Window::initWindow(int width, int height, const std::string& title)
+    {
+        bool result;
+        if(!glfwInit()) {
+            throw std::runtime_error("Failed to initialize glfw");
+        }
+
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+
+        m_window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
+        if(!m_window) {
+            glfwTerminate();
+            throw std::runtime_error("Failed to create window");
+        }
+        glfwSetWindowUserPointer(m_window, this);
+        glfwSetFramebufferSizeCallback(m_window, windowResizeCallback);
+        glfwSetKeyCallback(m_window, keyCallback);
+        glfwSetCursorPosCallback(m_window, cursorCallback);
+        glfwSetMouseButtonCallback(m_window, mouseClickCallback);
+        glfwGetFramebufferSize(m_window, &m_width, &m_height);
+        result = true;
+        return result;
+    }
+
     GLFWwindow *Window::handle() const
     {
         return m_window;
     }
 
-    uint32_t Window::width() const
+    int Window::width() const
     {
-        return m_windowdata.m_width;
+        return m_width;
     }
 
-    uint32_t Window::height() const
+    int Window::height() const
     {
-        return m_windowdata.m_height;
+        return m_height;
     }
 
-    bool Window::framebufferResized() const
+    std::vector<const char*> Window::instanceExtensions()
     {
-        return m_windowdata.m_framebufferresized;
-    }
-    void Window::framebufferSize(int& width, int& height)
-    {
-        glfwGetFramebufferSize(m_window, &width, &height);
+        uint32_t count = 0;
+        const char** glfwextensions;
+        glfwextensions = glfwGetRequiredInstanceExtensions(&count);
+        std::vector<const char*> extensions(glfwextensions, glfwextensions + count);
+        return extensions;
     }
 
     bool Window::shouldClose() const
     {
         return glfwWindowShouldClose(m_window);
-    }
-
-    void Window::setWindowShouldClose(bool close)
-    {
-        glfwSetWindowShouldClose(m_window, GLFW_TRUE);
-    }
-
-    void Window::setWindowTitle(const std::string& title)
-    {
-        glfwSetWindowTitle(m_window, title.c_str());
-    }
-
-    void Window::setFramebufferResized(bool resized)
-    {
-        m_windowdata.m_framebufferresized = resized;
-    }
-
-    void Window::setUserPtr(void* ptr)
-    {
-        glfwSetWindowUserPointer(m_window, ptr);
     }
 
     void Window::pollEvents()
@@ -136,38 +77,31 @@ namespace Lumos
         glfwSwapBuffers(m_window);
     }
 
-    void Window::makeCtxCurrent(GLFWwindow *ctx)
+    void Window::setWindowTitle(const std::string& title)
     {
-        glfwMakeContextCurrent(ctx);
+        glfwSetWindowTitle(m_window, title.c_str());
     }
 
-    void Window::initWindow(uint32_t width, uint32_t height, std::string title)
+    void Window::setWindowShouldClose(bool close)
     {
-        if(!glfwInit()) {
-            std::println("Failed to initialize GLFW");
-            return ;
-        }
-
-        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-
-        m_window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
-        if(!m_window) {
-            std::println("failed to create window");
-            glfwTerminate();
-            return ;
-        }
-        glfwMakeContextCurrent(m_window);
-        // glfwSetWindowUserPointer(m_window, &m_windowdata);
-        glfwSetFramebufferSizeCallback(m_window, framebufferCallback);
-        glfwSetKeyCallback(m_window, keyCallback);
-        glfwSetCursorPosCallback(m_window, cursorCallback);
-        glfwSetMouseButtonCallback(m_window, mouseClickCallback);
+        glfwSetWindowShouldClose(m_window, close);
     }
 
-    void Window::framebufferCallback(GLFWwindow *window, int width, int height)
+    void Window::setResizeCallback(std::function<void(int, int)> callback)
     {
-        auto* eventbus = static_cast<EventBus*>(glfwGetWindowUserPointer(window));
-        if (eventbus) {
+        m_resizecallback = std::move(callback);
+    }
+
+
+    /*********PRIVATE********/
+    void Window::windowResizeCallback(GLFWwindow *window, int width, int height)
+    {
+        auto* w = static_cast<Window*>(glfwGetWindowUserPointer(window));
+        w->m_width = width;
+        w->m_height = height;
+        w->m_windowresized = true;
+        if (w->m_resizecallback) {
+            w->m_resizecallback(width, height);
         }
     }
 
@@ -180,7 +114,7 @@ namespace Lumos
             event.scancode = scancode;
             event.action = action;
             event.mods = mods;
-            eventbus->publish(event);
+            // eventbus->publish(event);
         }
     }
 
@@ -203,11 +137,11 @@ namespace Lumos
             CursorMoveEvent event;
             event.x = xoffset;
             event.y = yoffset;
-            eventbus->publish(event);
+            // eventbus->publish(event);
             CursorMoveRawEvent rawevent;
             rawevent.x = xpos;
             rawevent.y = ypos;
-            eventbus->publish(rawevent);
+            // eventbus->publish(rawevent);
         }
         lastx = xpos;
         lasty = ypos;
@@ -227,9 +161,8 @@ namespace Lumos
             if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE) {
                 glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             }
-            eventbus->publish(event);
+            // eventbus->publish(event);
         }
-
     }
 }// namespace Lumos
 

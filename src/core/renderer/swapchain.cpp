@@ -9,13 +9,57 @@
 
 namespace Lumos
 {
-    SwapChain::SwapChain(Device& device, Window& window, VkSwapchainKHR oldswapchain)
-        : m_device(&device)
+    SwapChain::SwapChain(Device& device, Window& window, const RendererConfig& config, VkSwapchainKHR oldswapchain)
+        : m_device(device)
+        , m_window(window)
+        , m_config(config)
     {
-        SwapChainSupportDetails swapchainsupport = m_device->querySwapChainSupport(m_device->pdevice());
+        createSwapchain(oldswapchain);
+        createImageViews();
+    }
+
+    SwapChain::~SwapChain()
+    {
+        for (auto view : m_swapchainimageviews)
+        {
+            vkDestroyImageView(m_device.device(), view, nullptr);
+        }
+        vkDestroySwapchainKHR(m_device.device(), m_swapchain, nullptr);
+    }
+
+    VkSwapchainKHR SwapChain::swapchain() const
+    {
+        return m_swapchain;
+    }
+
+    VkFormat SwapChain::imageformat() const
+    {
+        return m_swapchainimageformat;
+    }
+
+    VkExtent2D SwapChain::extent() const
+    {
+        return m_swapchainextent;
+    }
+
+    const std::vector<VkImage>& SwapChain::images() const
+    {
+        return m_swapchainimages;
+    }
+    const std::vector<VkImageView>& SwapChain::imageviews() const
+    {
+        return m_swapchainimageviews;
+    }
+
+
+    /****** PRIVATE ******/
+
+    void SwapChain::createSwapchain(VkSwapchainKHR oldswapchain)
+    {
+        SwapChainSupportDetails swapchainsupport = m_device.querySwapChainSupport(m_device.pdevice());
         VkSurfaceFormatKHR surfaceformat = swapchainSurfaceFormat(swapchainsupport.formats);
         VkPresentModeKHR presentmode = swapchainPresentMode(swapchainsupport.presentModes);
-        VkExtent2D extent = swapExtent(swapchainsupport.capabilities, window);
+        VkExtent2D extent = swapExtent(swapchainsupport.capabilities, m_window);
 
         uint32_t imagecount = swapchainsupport.capabilities.minImageCount + 1;
         std::println("swapchain minImageCount: {}", swapchainsupport.capabilities.minImageCount);
@@ -31,7 +75,7 @@ namespace Lumos
         }
         VkSwapchainCreateInfoKHR swapinfo {
             .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
-            .surface = m_device->surface(),
+            .surface = m_device.surface(),
             .minImageCount = imagecount,
             .imageFormat = surfaceformat.format,
             .imageColorSpace = surfaceformat.colorSpace,
@@ -41,7 +85,7 @@ namespace Lumos
         };
         std::println("swapchain minImageCount {}", swapinfo.minImageCount);
 
-        auto indices = m_device->findQueueFamilies(m_device->pdevice());
+        auto indices = m_device.findQueueFamilies(m_device.pdevice());
         uint32_t queuefamilyindices[] = {indices.graphicsFamily.value(), indices.presentFamily.value() };
         if (indices.graphicsFamily != indices.presentFamily) {
             swapinfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
@@ -61,15 +105,17 @@ namespace Lumos
         swapinfo.clipped = VK_TRUE;
         swapinfo.oldSwapchain = oldswapchain;
         
-        VK_CHECK(vkCreateSwapchainKHR(m_device->device(), &swapinfo, nullptr, &m_swapchain));
+        VK_CHECK(vkCreateSwapchainKHR(m_device.device(), &swapinfo, nullptr, &m_swapchain));
         
-        VK_CHECK(vkGetSwapchainImagesKHR(m_device->device(), m_swapchain, &imagecount, nullptr));
+        VK_CHECK(vkGetSwapchainImagesKHR(m_device.device(), m_swapchain, &imagecount, nullptr));
         m_swapchainimages.resize(imagecount);
-        VK_CHECK(vkGetSwapchainImagesKHR(m_device->device(), m_swapchain, &imagecount, m_swapchainimages.data()));
-        
+        VK_CHECK(vkGetSwapchainImagesKHR(m_device.device(), m_swapchain, &imagecount, m_swapchainimages.data()));
         m_swapchainimageformat = surfaceformat.format;
         m_swapchainextent = extent;
+    }
 
+    void SwapChain::createImageViews()
+    {
         //image views
         m_swapchainimageviews.resize(m_swapchainimages.size());
         for (size_t i = 0; i < m_swapchainimageviews.size(); i++) {
@@ -96,79 +142,10 @@ namespace Lumos
                 }
             };
             
-            VK_CHECK(vkCreateImageView(m_device->device(), &imageviewinfo, nullptr, &m_swapchainimageviews[i]));
+            VK_CHECK(vkCreateImageView(m_device.device(), &imageviewinfo, nullptr, &m_swapchainimageviews[i]));
         }
     }
 
-    SwapChain::~SwapChain()
-    {
-        for (auto view : m_swapchainimageviews)
-        {
-            vkDestroyImageView(m_device->device(), view, nullptr);
-        }
-        vkDestroySwapchainKHR(m_device->device(), m_swapchain, nullptr);
-    }
-
-    SwapChain::SwapChain(SwapChain&& other) noexcept
-        : m_device(other.m_device)
-        , m_swapchain(std::exchange(other.m_swapchain, VK_NULL_HANDLE))
-        , m_swapchainimageformat(std::exchange(other.m_swapchainimageformat, VK_FORMAT_UNDEFINED))
-        , m_swapchainextent(std::exchange(other.m_swapchainextent, {0,0}))
-        , m_swapchainimages(std::exchange(other.m_swapchainimages, {}))
-        , m_swapchainimageviews(std::exchange(other.m_swapchainimageviews, {}))
-    {
-        other.m_device = nullptr;
-    }
-
-    SwapChain& SwapChain::operator=(SwapChain&& other) noexcept
-    {
-        if (&other == this) {
-            return *this;
-        }
-        for (auto view : m_swapchainimageviews) {
-            vkDestroyImageView(m_device->device(), view, nullptr);
-        }
-        if (m_swapchain != VK_NULL_HANDLE) {
-            vkDestroySwapchainKHR(m_device->device(), m_swapchain, nullptr);
-        }
-
-        m_device = std::exchange(other.m_device, nullptr);
-        m_swapchain = std::exchange(other.m_swapchain, VK_NULL_HANDLE);
-        m_swapchainimageformat = std::exchange(other.m_swapchainimageformat, VK_FORMAT_UNDEFINED);
-        m_swapchainextent = std::exchange(other.m_swapchainextent, {0,0});
-        m_swapchainimages = std::exchange(other.m_swapchainimages, {});
-        m_swapchainimageviews = std::exchange(other.m_swapchainimageviews, {});
-
-        return *this;
-    }
-
-
-    VkSwapchainKHR SwapChain::swapchain() const noexcept
-    {
-        return m_swapchain;
-    }
-
-    VkFormat SwapChain::imageformat() const noexcept
-    {
-        return m_swapchainimageformat;
-    }
-
-    VkExtent2D SwapChain::extent() const noexcept
-    {
-        return m_swapchainextent;
-    }
-
-    std::vector<VkImage> SwapChain::images() const noexcept
-    {
-        return m_swapchainimages;
-    }
-    std::vector<VkImageView> SwapChain::imageviews() const noexcept
-    {
-        return m_swapchainimageviews;
-    }
-
-
-    /****** PRIVATE ******/
     VkSurfaceFormatKHR SwapChain::swapchainSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& formats)
     {
         for (auto& format : std::as_const(formats))
@@ -184,15 +161,25 @@ namespace Lumos
 
     VkPresentModeKHR SwapChain::swapchainPresentMode(const std::vector<VkPresentModeKHR>& presentmodes)
     {
-        for (auto& presentMode : std::as_const(presentmodes))
-        {
-            if (presentMode == VK_PRESENT_MODE_MAILBOX_KHR)
+        if (!m_config.vsync) {
+            for (auto& presentMode : std::as_const(presentmodes))
             {
-                std::println("using VK_PRESENT_MODE_MAILBOX_KHR\n");
-                return presentMode;
+                if (presentMode == VK_PRESENT_MODE_MAILBOX_KHR)
+                {
+                    std::println("using VK_PRESENT_MODE_MAILBOX_KHR");
+                    return presentMode;
+                }
+            }
+
+            //maybe fallback to immediated mode?
+            for(auto& presentMode : std::as_const(presentmodes)) {
+                if (presentMode == VK_PRESENT_MODE_IMMEDIATE_KHR) {
+                    std::println("using VK_PRESENT_MODE_IMMEDIATE_KHR");
+                    return presentMode;
+                }
             }
         }
-        std::println("using VK_PRESENT_MODE_FIFO_KHR\n");
+        std::println("using VK_PRESENT_MODE_FIFO_KHR");
         return VK_PRESENT_MODE_FIFO_KHR;
     }
 

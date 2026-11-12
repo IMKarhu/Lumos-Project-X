@@ -13,6 +13,8 @@ target_include_directories(lumos_core
 find_package(Vulkan REQUIRED)
 find_package(slang REQUIRED)
 
+add_subdirectory(engine)
+add_subdirectory(resources)
 add_subdirectory(ecs)
 add_subdirectory(windowing)
 add_subdirectory(renderer)

@@ -1,40 +1,32 @@
 #include "pipeline.h"
 #include "errorcheck.h"
 #include "device.h"
+#include "renderdata.h"
 #include <fstream>
 #include <utility>
+#include <array>
 
 namespace Lumos
 {
+    GraphicsPipeline::GraphicsPipeline(Device& device,
+            VkDescriptorSetLayout camerasetlayout,
+            VkDescriptorSetLayout entitysetlayout,
+            VkDescriptorSetLayout texturesetlayout, 
+            VkFormat colorformat)
+        : m_device(device)
+        , m_camerasetlayout(camerasetlayout)
+        , m_entitysetlayout(entitysetlayout)
+        , m_texturesetlayout(texturesetlayout)
+        , m_colorformat(colorformat)
+    {
+        createPipelineLayout();
+        createPipeline("shaders/sprite.spv");
+    }
+
     GraphicsPipeline::~GraphicsPipeline()
     {
-        destroy();
-    }
-
-    GraphicsPipeline::GraphicsPipeline(GraphicsPipeline&& other) noexcept
-        : m_device(std::exchange(other.m_device, nullptr))
-        , m_pipeline(std::exchange(other.m_pipeline, VK_NULL_HANDLE))
-        , m_layout(std::exchange(other.m_layout, VK_NULL_HANDLE))
-    {
-
-    }
-    
-    GraphicsPipeline& GraphicsPipeline::operator=(GraphicsPipeline&& other) noexcept
-    {
-        if (&other == this) {
-            return *this;
-        }
-
-        destroy();
-        m_device = std::exchange(other.m_device, nullptr);
-        m_pipeline = std::exchange(other.m_pipeline, VK_NULL_HANDLE);
-        m_layout = std::exchange(other.m_layout, VK_NULL_HANDLE);
-        return *this;
-    }
-
-    VkPipeline GraphicsPipeline::pipeline() const noexcept
-    {
-        return m_pipeline;
+        vkDestroyPipeline(m_device.device(), m_pipeline, nullptr);
+        vkDestroyPipelineLayout(m_device.device(), m_layout, nullptr);
     }
 
     VkPipelineLayout GraphicsPipeline::layout() const noexcept
@@ -42,32 +34,46 @@ namespace Lumos
         return m_layout;
     }
 
-    GraphicsPipeline GraphicsPipeline::create(Device& device, const GraphicsPipelineDescription& desc)
+    void GraphicsPipeline::createPipeline(const std::string& shaderpath)
     {
-        GraphicsPipeline pipeline;
-        pipeline.m_device = &device;
+        auto code = readFile(shaderpath);
+        VkShaderModule shadermodule = shaderModule(code, m_device.device());
+
+        VkPipelineShaderStageCreateInfo vertexShaderStageCI {
+            .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+            .stage = VK_SHADER_STAGE_VERTEX_BIT,
+            .module = shadermodule,
+            .pName = "vertMain",
+        };
+
+        VkPipelineShaderStageCreateInfo fragmentShaderStageCI {
+            .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+            .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
+            .module = shadermodule,
+            .pName = "fragMain"
+        };
+        VkPipelineShaderStageCreateInfo stages[] = {
+            vertexShaderStageCI,
+            fragmentShaderStageCI
+        };
 
         VkPipelineVertexInputStateCreateInfo vertexinputinfo {
             .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
-            .vertexBindingDescriptionCount = static_cast<uint32_t>(desc.vertexbindings.size()),
-            .pVertexBindingDescriptions = desc.vertexbindings.data(),
-            .vertexAttributeDescriptionCount = static_cast<uint32_t>(desc.vertexattributes.size()),
-            .pVertexAttributeDescriptions = desc.vertexattributes.data()
+            .vertexBindingDescriptionCount = 0,
+            .pVertexBindingDescriptions = nullptr,
+            .vertexAttributeDescriptionCount = 0,
+            .pVertexAttributeDescriptions = nullptr
         };
 
         VkPipelineInputAssemblyStateCreateInfo inputassembly {
             .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
-            .topology = desc.topology,
+            .topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
             .primitiveRestartEnable = VK_FALSE
         };
 
         std::vector<VkDynamicState> dynamicstates;
-        if (desc.dynamicviewport) {
-            dynamicstates.push_back(VK_DYNAMIC_STATE_VIEWPORT);
-        }
-        if (desc.dynamicscissor) {
-            dynamicstates.push_back(VK_DYNAMIC_STATE_SCISSOR);
-        }
+        dynamicstates.push_back(VK_DYNAMIC_STATE_VIEWPORT);
+        dynamicstates.push_back(VK_DYNAMIC_STATE_SCISSOR);
         VkPipelineDynamicStateCreateInfo dynamiccreateinfo {
             .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
             .dynamicStateCount = static_cast<uint32_t>(dynamicstates.size()),
@@ -84,9 +90,9 @@ namespace Lumos
             .sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
             .depthClampEnable = VK_FALSE,
             .rasterizerDiscardEnable = VK_FALSE,
-            .polygonMode = desc.polygonmode,
-            .cullMode = desc.cullmode,
-            .frontFace = desc.frontface,
+            .polygonMode = VK_POLYGON_MODE_FILL,
+            .cullMode = VK_CULL_MODE_NONE,
+            .frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
             .depthBiasEnable = VK_FALSE,
             .depthBiasConstantFactor = 0.0f, // Optional
             .depthBiasClamp = 0.0f, // Optional
@@ -110,22 +116,9 @@ namespace Lumos
             .dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
             .colorBlendOp = VK_BLEND_OP_ADD,
             .srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE,
-            .dstAlphaBlendFactor = desc.dstalphablendfactor,
+            .dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO,
             .alphaBlendOp = VK_BLEND_OP_ADD,
             .colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT
-        };
-
-        VkPipelineDepthStencilStateCreateInfo depthstencil {
-            .sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
-            .depthTestEnable = desc.depthtest,
-            .depthWriteEnable = desc.depthwrite,
-            .depthCompareOp = VK_COMPARE_OP_LESS,
-            .depthBoundsTestEnable = VK_FALSE,
-            .stencilTestEnable = VK_FALSE,
-            .front = {}, // Optional
-            .back = {}, // Optional
-            .minDepthBounds = 0.0f, // Optional
-            .maxDepthBounds = 1.0f // Optional
         };
 
         VkPipelineColorBlendStateCreateInfo colorblending {
@@ -142,61 +135,71 @@ namespace Lumos
             }
         };
 
-        VkPipelineLayoutCreateInfo pipelinelayoutinfo {
-            .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-            //these are only needed when push constants and descriptors are used
-            .setLayoutCount = static_cast<uint32_t>(desc.descriptorlayouts.size()),
-            .pSetLayouts = desc.descriptorlayouts.data(),
-            .pushConstantRangeCount = desc.pushconstantcount,
-            .pPushConstantRanges = desc.pushconstantranges.size() == 0 ? nullptr : desc.pushconstantranges.data()  
-        };
-
-        VK_CHECK(vkCreatePipelineLayout(device.device(), &pipelinelayoutinfo, nullptr, &pipeline.m_layout));
-
-        //desc.depthformat when that is used
         VkPipelineRenderingCreateInfo renderinginfo {
             .sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
             .colorAttachmentCount = 1,
-            .pColorAttachmentFormats = &desc.colorformat,
-            .depthAttachmentFormat = desc.depthformat
+            .pColorAttachmentFormats = &m_colorformat,
         };
 
         VkGraphicsPipelineCreateInfo pipelineinfo {
             .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
             .pNext = &renderinginfo,
             .stageCount = 2,
-            .pStages = desc.shaderstages.data(),
+            .pStages = stages,
             .pVertexInputState = &vertexinputinfo,
             .pInputAssemblyState = &inputassembly,
             .pViewportState = &viewportstate,
             .pRasterizationState = &rasterizer,
             .pMultisampleState = &multisampling,
-            .pDepthStencilState = &depthstencil,
             .pColorBlendState = &colorblending,
             .pDynamicState = &dynamiccreateinfo,
-            .layout = pipeline.m_layout,
+            .layout = m_layout,
             .renderPass = nullptr,
             .subpass = 0,
             .basePipelineHandle = VK_NULL_HANDLE, // Optional
             .basePipelineIndex = -1 // Optional
         };
 
-        VK_CHECK(vkCreateGraphicsPipelines(device.device(), VK_NULL_HANDLE, 1, &pipelineinfo, nullptr, &pipeline.m_pipeline));
-        return pipeline;
+        VK_CHECK(vkCreateGraphicsPipelines(m_device.device(), VK_NULL_HANDLE, 1, &pipelineinfo, nullptr, &m_pipeline));
+
+
+        vkDestroyShaderModule(m_device.device(), shadermodule, nullptr);
     }
 
-    void GraphicsPipeline::destroy()
+    void GraphicsPipeline::bind(VkCommandBuffer cmdbuf)
     {
-        if (m_pipeline != VK_NULL_HANDLE) {
-            vkDestroyPipeline(m_device->device(), m_pipeline, nullptr);
-        }
-        if (m_layout != VK_NULL_HANDLE) {
-            vkDestroyPipelineLayout(m_device->device(), m_layout, nullptr);
-        }
+        vkCmdBindPipeline(cmdbuf, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
+    }
 
-        m_device = nullptr;
-        m_pipeline = VK_NULL_HANDLE;
-        m_layout = VK_NULL_HANDLE;
+    void GraphicsPipeline::createPipelineLayout()
+    {
+        // VkPushConstantRange pushconstantrange{
+        //     .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+        //     .offset = 0,
+        //     .size = sizeof(ObjectPushConstant)
+        // };
+
+        std::array<VkDescriptorSetLayout, 3> layouts {m_camerasetlayout, m_entitysetlayout, m_texturesetlayout};
+        VkPipelineLayoutCreateInfo info{
+            .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+            .setLayoutCount = static_cast<uint32_t>(layouts.size()),
+            .pSetLayouts = layouts.data()
+            // .pushConstantRangeCount = 1,
+            // .pPushConstantRanges = &pushconstantrange
+        };
+        VK_CHECK(vkCreatePipelineLayout(m_device.device(), &info, nullptr, &m_layout));
+    }
+
+
+    VkShaderModule GraphicsPipeline::shaderModule(const std::vector<char>& buffer, VkDevice device)
+    {
+        VkShaderModuleCreateInfo moduleinfo{};
+        moduleinfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+        moduleinfo.codeSize = buffer.size();
+        moduleinfo.pCode = reinterpret_cast<const uint32_t*>(buffer.data());
+        VkShaderModule shadermodule;
+        VK_CHECK(vkCreateShaderModule(device, &moduleinfo, nullptr, &shadermodule));
+        return shadermodule;
     }
 
     std::vector<char> readFile(const std::string& filename)
@@ -211,16 +214,5 @@ namespace Lumos
         file.read(buffer.data(), filesize);
         file.close();
         return buffer;
-    }
-
-    VkShaderModule shaderModule(const std::vector<char>& buffer, VkDevice device)
-    {
-        VkShaderModuleCreateInfo moduleinfo{};
-        moduleinfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-        moduleinfo.codeSize = buffer.size();
-        moduleinfo.pCode = reinterpret_cast<const uint32_t*>(buffer.data());
-        VkShaderModule shadermodule;
-        VK_CHECK(vkCreateShaderModule(device, &moduleinfo, nullptr, &shadermodule));
-        return shadermodule;
     }
 } //namespace Lumos
