@@ -92,6 +92,7 @@ namespace Lumos
 
     Device::~Device()
     {
+        std::println("device destructor called");
         destroyDebugUtilsMessenger(m_instance, m_debugmessenger, nullptr);
         vkDestroyDevice(m_device, nullptr);
         vkDestroySurfaceKHR(m_instance, m_surface, nullptr);

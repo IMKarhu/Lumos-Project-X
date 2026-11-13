@@ -45,4 +45,5 @@ buildvs/
 .cache
 compile_commands.json
 textures/
+pictures/
 .vs

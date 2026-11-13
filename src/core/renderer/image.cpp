@@ -76,7 +76,6 @@ namespace Lumos
         if (m_memory != VK_NULL_HANDLE) {
             vkFreeMemory(m_device->device(), m_memory, nullptr);
         }
-
     }
 
     VkImage Image::image() const

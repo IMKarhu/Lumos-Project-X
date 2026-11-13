@@ -27,6 +27,21 @@ namespace Lumos
         return VK_FALSE;
     }
 
+    static VkSamplerAddressMode addressmodeHelper(AddressMode addressmode)
+    {
+        switch(addressmode)
+        {
+            case Lumos::AddressMode::ClampToEdge:
+                return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+            case Lumos::AddressMode::MirrorRepeat:
+                return VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+            case Lumos::AddressMode::Repeat:
+                return VK_SAMPLER_ADDRESS_MODE_REPEAT;
+            default:
+                return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        }
+    }
+
     Sampler::Sampler(Device& device, SamplerConfig config)
         : m_device(device)
     {
@@ -35,12 +50,12 @@ namespace Lumos
 
         VkSamplerCreateInfo samplerinfo {
             .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
-            .magFilter = filterHelper(config.filtermode),
-            .minFilter = filterHelper(config.filtermode),
-            .mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR,
-            .addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
-            .addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
-            .addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+            .magFilter = filterHelper(config.magfilter),
+            .minFilter = filterHelper(config.minfilter),
+            .mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST,
+            .addressModeU = addressmodeHelper(config.addressmodeu),
+            .addressModeV = addressmodeHelper(config.addressmodev),
+            .addressModeW = addressmodeHelper(config.addressmodew),
             .anisotropyEnable = anisotropy(config.enableanisotropy),
             .maxAnisotropy = pdeviceproperties.limits.maxSamplerAnisotropy,
             .compareEnable = VK_FALSE,

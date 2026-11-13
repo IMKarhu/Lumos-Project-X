@@ -8,9 +8,21 @@ namespace Lumos
         Linear,
         Nearest
     };
+
+    enum class AddressMode
+    {
+        Repeat,
+        MirrorRepeat,
+        ClampToEdge
+    };
     struct SamplerConfig
     {
-        FilterMode filtermode = FilterMode::Nearest;
+        FilterMode minfilter = FilterMode::Nearest;
+        FilterMode magfilter = FilterMode::Nearest;
+        AddressMode addressmodeu = AddressMode::ClampToEdge;
+        AddressMode addressmodev = AddressMode::ClampToEdge;
+        AddressMode addressmodew = AddressMode::ClampToEdge;
+
         bool enableanisotropy = false;
     };
     class Device;
