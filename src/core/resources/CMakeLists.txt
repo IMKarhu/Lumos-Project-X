@@ -1,5 +1,6 @@
 target_sources(lumos_core
     PUBLIC
+        json.hpp
         resource.cpp
         resource.h
         resourcehandle.h

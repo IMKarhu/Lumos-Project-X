@@ -27,6 +27,16 @@ namespace Lumos
         return *m_sampler;
     }
 
+    const uint32_t Texture::width() const
+    {
+        return m_width;
+    }
+
+    const uint32_t Texture::height() const
+    {
+        return m_height;
+    }
+
     bool Texture::loadResource(ResourceManager& manager)
     {
         std::string filepath = "../textures/"+id()+".ktx2";
@@ -42,6 +52,8 @@ namespace Lumos
         std::println("texture size: {}x{}", texture->baseWidth, texture->baseHeight);
         uint32_t width = texture->baseWidth;
         uint32_t height = texture->baseHeight;
+        m_width = width;
+        m_height = height;
         ktx_size_t imagesize = ktxTexture_GetImageSize(texture, 0);
         ktx_uint8_t* texturedata = ktxTexture_GetData(texture);
         if (!texturedata) {

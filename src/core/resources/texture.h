@@ -15,10 +15,14 @@ namespace Lumos
 
         [[nodiscard]] const Image& image() const;
         [[nodiscard]] const Sampler& sampler() const;
+        const uint32_t width() const;
+        const uint32_t height() const;
 
         bool loadResource(ResourceManager& manager) override;
         bool unloadResource() override;
     private:
+        uint32_t m_width;
+        uint32_t m_height;
         std::unique_ptr<Image> m_image;
         std::unique_ptr<Sampler> m_sampler;
     };

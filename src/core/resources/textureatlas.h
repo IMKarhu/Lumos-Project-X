@@ -1,4 +1,5 @@
 #pragma once
+#include <filesystem>
 #include <glm/glm.hpp>
 #include "resource.h"
 #include "resourcehandle.h"
@@ -14,14 +15,13 @@ namespace Lumos
 
     struct AtlasDescription
     {
-        glm::uvec2 texturesize{};
         std::unordered_map<std::string, AtlasRegion> regions;
     };
 
     class TextureAtlas : public Resource
     {
     public:
-        explicit TextureAtlas(const std::string& id, const AtlasDescription& desc);
+        explicit TextureAtlas(const std::string& id, const std::filesystem::path& filepath);
         ~TextureAtlas() override;
 
         const Texture& texture() const;
@@ -30,7 +30,7 @@ namespace Lumos
         bool loadResource(ResourceManager& manager) override;
         bool unloadResource() override;
     private:
-        AtlasDescription m_desc;
+        std::filesystem::path m_filepath;
         ResourceHandle<Texture> m_texture;
         std::unordered_map<std::string, glm::vec4> m_regions;
     };

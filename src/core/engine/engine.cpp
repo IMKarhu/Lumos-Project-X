@@ -32,10 +32,9 @@ namespace Lumos
 
             m_resourcemanager = std::make_unique<ResourceManager>(*m_renderer);
             Lumos::AtlasDescription desc;
-            desc.texturesize = {128, 32};
             desc.regions["test"] = {{0, 0}, {64, 32}};
             desc.regions["test2"] = {{64, 0}, {64, 32}};
-            auto tex = m_resourcemanager->load<Lumos::TextureAtlas>("testsprite", desc);
+            auto tex = m_resourcemanager->load<Lumos::TextureAtlas>("testsprite", "../testjsons/test.json");
             auto res = m_resourcemanager->getResource<Lumos::TextureAtlas>("testsprite");
             m_renderer->setTexture(res->texture().image(), res->texture().sampler());
 
@@ -109,17 +108,17 @@ namespace Lumos
         renderdata.cameradata.size = {640, 320};
         RenderObject obj;
         obj.position = {0.0f, 0.0f};
-        obj.size = {100.0f, 100.0f};
+        obj.size = {10.0f, 10.0f};
         obj.rotation = 0.0f;
         obj.color = {1.0f, 0.0f, 0.0f, 1.0f};
-        obj.uvrect = atlas->uv("test");
+        obj.uvrect = atlas->uv("floor2");
         renderdata.renderobjects.push_back(obj);
         RenderObject obj2;
         obj2.position = {200.0f, 0.0f};
         obj2.size = {100.0f, 100.0f};
         obj2.rotation = 45.0f;
         obj2.color = {1.0f, 1.0f, 0.0f, 1.0f};
-        obj2.uvrect = atlas->uv("test2");
+        obj2.uvrect = atlas->uv("floor");
         renderdata.renderobjects.push_back(obj2);
         RenderObject obj3;
         obj3.position = {0.0f, 100.0f};

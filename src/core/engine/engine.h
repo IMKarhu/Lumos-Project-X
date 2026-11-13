@@ -24,9 +24,9 @@ namespace Lumos
         std::chrono::milliseconds m_deltatime{0};
         uint64_t m_lastframeInMs = 0;
 
-        std::unique_ptr<ResourceManager> m_resourcemanager;
         std::unique_ptr<Window> m_window;
         std::unique_ptr<Renderer> m_renderer;
+        std::unique_ptr<ResourceManager> m_resourcemanager;
 
         std::chrono::milliseconds deltatime();
         void resize(int width, int height);

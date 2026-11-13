@@ -15,6 +15,11 @@ namespace Lumos
     {
     public:
         ResourceManager(Renderer& renderer) : m_renderer(renderer) {}
+        ~ResourceManager()
+        {
+            std::println("res manager destructor called");
+            realeaseAll();
+        }
         template<typename T, typename... Args>
         ResourceHandle<T> load(const std::string& id, Args&&...args) {
             static_assert(std::is_base_of<Resource, T>::value, "T must be derived from resource");
@@ -68,6 +73,10 @@ namespace Lumos
         template<typename T>
         void release(const std::string& id) {
             assert(0 && "TODO: IMPLEMENT ASSET RELEASE");
+        }
+
+        void realeaseAll() {
+            m_resources.clear();
         }
 
         Renderer& renderer() { return m_renderer; }

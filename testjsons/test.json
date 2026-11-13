@@ -1,5 +1,5 @@
 {
-    "texture": "terrain.ktx",
+    "texture": "testsprite.ktx2",
     "size": [128, 32],
     "regions": {
         "floor": {
