@@ -16,10 +16,9 @@ namespace Lumos
         [[nodiscard]] const Image& image() const;
         [[nodiscard]] const Sampler& sampler() const;
 
-        bool loadResource(Renderer& renderer) override;
+        bool loadResource(ResourceManager& manager) override;
         bool unloadResource() override;
     private:
-        void createImage(void* data, int with, int height, int channels);
         std::unique_ptr<Image> m_image;
         std::unique_ptr<Sampler> m_sampler;
     };

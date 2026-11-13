@@ -14,7 +14,7 @@ namespace Lumos
     class ResourceManager
     {
     public:
-        ResourceManager(Renderer& renderer) :m_renderer(renderer) {}
+        ResourceManager(Renderer& renderer) : m_renderer(renderer) {}
         template<typename T, typename... Args>
         ResourceHandle<T> load(const std::string& id, Args&&...args) {
             static_assert(std::is_base_of<Resource, T>::value, "T must be derived from resource");
@@ -29,7 +29,7 @@ namespace Lumos
                     r->unload();
                     delete r;
                     });
-            if (!resource->load(m_renderer)) {
+            if (!resource->load(*this)) {
                 throw std::runtime_error("failed to load resource: " + id);
             } else {
                 std::println("successfully loaded resource");
@@ -68,12 +68,9 @@ namespace Lumos
         template<typename T>
         void release(const std::string& id) {
             assert(0 && "TODO: IMPLEMENT ASSET RELEASE");
-            // auto& refit = m_refcounts[std::type_index(typeid(T))];
-            // auto it = refit.find(id);
-            // if (it != refit.end()) {
-            //     it->second.m_refcount--;
-            // }
         }
+
+        Renderer& renderer() { return m_renderer; }
     private:
         Renderer& m_renderer;
         std::unordered_map<std::type_index,

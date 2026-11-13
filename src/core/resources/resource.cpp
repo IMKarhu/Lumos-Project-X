@@ -1,5 +1,5 @@
 #include "resource.h"
-#include "renderer/renderer.h"
+#include "resourcemanager.h"
 
 namespace Lumos
 {
@@ -16,13 +16,13 @@ namespace Lumos
         return m_loaded;
     }
 
-    bool Resource::load(Renderer& renderer)
+    bool Resource::load(ResourceManager& manager)
     {
         if (m_loaded) {
             return true;
         }
 
-        m_loaded = loadResource(renderer);
+        m_loaded = loadResource(manager);
         return m_loaded;
     }
 

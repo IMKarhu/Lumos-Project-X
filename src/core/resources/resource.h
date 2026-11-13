@@ -3,7 +3,7 @@
 
 namespace Lumos
 {
-    class Renderer;
+    class ResourceManager;
     class Resource
     {
     public:
@@ -13,10 +13,10 @@ namespace Lumos
         const std::string& id() const;
         bool loaded() const;
 
-        bool load(Renderer& renderer);
+        bool load(ResourceManager& manager);
         void unload();
     protected:
-        virtual bool loadResource(Renderer& renderer) = 0;
+        virtual bool loadResource(ResourceManager& manager) = 0;
         virtual bool unloadResource() = 0;
     private:
         std::string m_id;

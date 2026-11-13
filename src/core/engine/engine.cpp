@@ -2,7 +2,7 @@
 
 #include <print>
 #include <stdexcept>
-#include "resources/texture.h"
+#include "resources/textureatlas.h"
 
 namespace Lumos
 {
@@ -31,9 +31,13 @@ namespace Lumos
             m_renderer = std::make_unique<Renderer>(*m_window, config);
 
             m_resourcemanager = std::make_unique<ResourceManager>(*m_renderer);
-            auto tex = m_resourcemanager->load<Lumos::Texture>("witch_player_first");
-            auto res = m_resourcemanager->getResource<Lumos::Texture>("witch_player_first");
-            m_renderer->setTexture(res->image(), res->sampler());
+            Lumos::AtlasDescription desc;
+            desc.texturesize = {128, 32};
+            desc.regions["test"] = {{0, 0}, {64, 32}};
+            desc.regions["test2"] = {{64, 0}, {64, 32}};
+            auto tex = m_resourcemanager->load<Lumos::TextureAtlas>("testsprite", desc);
+            auto res = m_resourcemanager->getResource<Lumos::TextureAtlas>("testsprite");
+            m_renderer->setTexture(res->texture().image(), res->texture().sampler());
 
             m_initialized = true;
         }
@@ -98,6 +102,8 @@ namespace Lumos
         if (!m_renderer) {
             return;
         }
+        auto atlas = m_resourcemanager->getResource<Lumos::TextureAtlas>("testsprite");
+
         RenderData renderdata{};
         renderdata.cameradata.position = {0.0f, 0.0f};
         renderdata.cameradata.size = {640, 320};
@@ -106,14 +112,14 @@ namespace Lumos
         obj.size = {100.0f, 100.0f};
         obj.rotation = 0.0f;
         obj.color = {1.0f, 0.0f, 0.0f, 1.0f};
-        obj.uvrect = {0.0f, 0.0f, 1.0f, 1.0f};
+        obj.uvrect = atlas->uv("test");
         renderdata.renderobjects.push_back(obj);
         RenderObject obj2;
         obj2.position = {200.0f, 0.0f};
         obj2.size = {100.0f, 100.0f};
         obj2.rotation = 45.0f;
         obj2.color = {1.0f, 1.0f, 0.0f, 1.0f};
-        obj2.uvrect = {0.0f, 0.0f, 1.0f, 1.0f};
+        obj2.uvrect = atlas->uv("test2");
         renderdata.renderobjects.push_back(obj2);
         RenderObject obj3;
         obj3.position = {0.0f, 100.0f};

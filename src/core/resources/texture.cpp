@@ -2,7 +2,7 @@
 #include "renderer/image.h"
 #include "renderer/sampler.h"
 #include "renderer/buffer.h"
-#include "renderer/renderer.h"
+#include "resourcemanager.h"
 #include "ktx.h"
 #include <utility>
 #include <print>
@@ -27,7 +27,7 @@ namespace Lumos
         return *m_sampler;
     }
 
-    bool Texture::loadResource(Renderer& renderer)
+    bool Texture::loadResource(ResourceManager& manager)
     {
         std::string filepath = "../textures/"+id()+".ktx2";
         ktxTexture* texture = nullptr;
@@ -48,17 +48,17 @@ namespace Lumos
             std::println("texture data is null");
             return false;
         }
-        auto stage = renderer.createBuffer(imagesize, texturedata);
+        auto stage = manager.renderer().createBuffer(imagesize, texturedata);
 
-        m_image = renderer.createImage(width, height);
+        m_image = manager.renderer().createImage(width, height);
 
-        m_sampler = renderer.createSampler();
-        renderer.transitionImageLayout(m_image->image(),
+        m_sampler = manager.renderer().createSampler();
+        manager.renderer().transitionImageLayout(m_image->image(),
                                          VK_FORMAT_R8G8B8A8_SRGB,
                                          VK_IMAGE_LAYOUT_UNDEFINED,
                                          VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-        renderer.copyBufferToImage(*stage, m_image->image(), width, height);
-        renderer.transitionImageLayout(m_image->image(),
+        manager.renderer().copyBufferToImage(*stage, m_image->image(), width, height);
+        manager.renderer().transitionImageLayout(m_image->image(),
                                VK_FORMAT_R8G8B8A8_SRGB,
                                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
@@ -69,10 +69,9 @@ namespace Lumos
 
     bool Texture::unloadResource()
     {
-        return false;
-    }
-
-    void Texture::createImage(void* data, int with, int height, int channels)
-    {
+        // Do we need to "unload" anything here?
+        // images and samplers destructor should be called automatically
+        // when textures destructor is called
+        return true;
     }
 } //namespace Lumos

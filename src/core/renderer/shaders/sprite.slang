@@ -61,5 +61,5 @@ VertexOutput vertMain(uint vertexID : SV_VertexID, uint instanceID : SV_Instance
 [shader("fragment")]
 float4 fragMain(VertexOutput inVert) : SV_TARGET {
     float4 tex = texture.Sample(texturesampler, inVert.uv);
-    return tex * inVert.color;
+    return inVert.color * tex;
 }

@@ -74,7 +74,7 @@ namespace Lumos
         std::unique_ptr<Buffer> buf = std::make_unique<Buffer>(*m_device, bufsize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
         void* datas = buf->map();
-        std::memcpy(data, data, bufsize);
+        std::memcpy(datas, data, bufsize);
         buf->unmap();
         return std::move(buf);
     }
@@ -434,7 +434,6 @@ namespace Lumos
 
     VkCommandBuffer Renderer::beginSingleTimeCommands()
     {
-        std::println("begin single command");
         VkCommandBufferAllocateInfo allocinfo {
             .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
             .commandPool = m_commandpool,

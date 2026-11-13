@@ -7,4 +7,6 @@ target_sources(lumos_core
         resourcemanager.h
         texture.cpp
         texture.h
+        textureatlas.h
+        textureatlas.cpp
 )
