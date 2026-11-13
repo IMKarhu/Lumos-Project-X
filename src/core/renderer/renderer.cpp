@@ -44,12 +44,13 @@ namespace Lumos
 
     void Renderer::cleanup()
     {
-        vkDestroyCommandPool(m_device->device(), m_commandpool, nullptr);
+        vkDestroyDescriptorPool(m_device->device(), m_descriptorpool, nullptr);
         for (size_t i = 0; i < m_framedata.size(); ++i) {
             vkDestroySemaphore(m_device->device(), m_framedata[i].imageavailablesemaphore, nullptr);
             vkDestroySemaphore(m_device->device(), m_framedata[i].renderfinishedsemaphore, nullptr);
             vkDestroyFence(m_device->device(), m_framedata[i].inflightfence, nullptr);
         }
+        vkDestroyCommandPool(m_device->device(), m_commandpool, nullptr);
     }
 
     void Renderer::setTexture(const Image& image, const Sampler& sampler)
@@ -82,7 +83,11 @@ namespace Lumos
     std::unique_ptr<Sampler> Renderer::createSampler()
     {
         SamplerConfig config{
-            .filtermode = FilterMode::Nearest,
+            .minfilter = FilterMode::Nearest,
+            .magfilter = FilterMode::Nearest,
+            .addressmodeu = AddressMode::ClampToEdge,
+            .addressmodev = AddressMode::ClampToEdge,
+            .addressmodew = AddressMode::ClampToEdge,
             .enableanisotropy = false
         };
         return std::make_unique<Sampler>(*m_device, config);
@@ -683,14 +688,20 @@ namespace Lumos
 
     glm::mat4 Renderer::viewproj(const CameraData& camera) const
     {
+        const glm::vec2 halfsize = camera.size / (2.0f * camera.zoom);
         const glm::mat4 projection = glm::ortho(
-                camera.position.x - camera.size.x * 0.5f,
-                camera.position.x + camera.size.x * 0.5f,
-                camera.position.y - camera.size.y * 0.5f,
-                camera.position.y + camera.size.y * 0.5f,
+                camera.position.x - halfsize.x,
+                camera.position.x + halfsize.x,
+                camera.position.y - halfsize.y,
+                camera.position.y + halfsize.y,
                 -1.0f,
                  1.0f);
-        const glm::mat4 view = glm::translate(
+        glm::mat4 view = glm::rotate(
+                glm::mat4(1.0f),
+                -camera.rotation,
+                glm::vec3(0.0f, 0.0f, 1.0f));
+
+        view = view * glm::translate(
                 glm::mat4(1.0f),
                 glm::vec3(-camera.position,
                 0.0f));

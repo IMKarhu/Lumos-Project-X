@@ -1,8 +1,6 @@
 #pragma once
-#include <string>
 #include <cstdint>
 #include <vector>
-#include <optional>
 #include <memory>
 
 #include "rendererconfig.h"

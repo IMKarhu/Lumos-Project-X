@@ -8,6 +8,8 @@ namespace Lumos
     {
         glm::vec2 position;
         glm::vec2 size;
+        float zoom = 1.0f;
+        float rotation = 0.0f;
     };
 
     struct RenderObject
