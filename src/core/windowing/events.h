@@ -107,6 +107,17 @@ namespace Lumos
         }
     };
 
+    struct ScrollEvent : public Event
+    {
+        double xoffset;
+        double yoffset;
+
+        void dispatch(EventBus& bus) const override
+        {
+            bus.publish(*this);
+        }
+    };
+
     class EventQueue
     {
     public:

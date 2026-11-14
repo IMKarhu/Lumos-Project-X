@@ -28,6 +28,7 @@ namespace Lumos
         glfwSetKeyCallback(m_window, keyCallback);
         glfwSetCursorPosCallback(m_window, cursorCallback);
         glfwSetMouseButtonCallback(m_window, mouseClickCallback);
+        glfwSetScrollCallback(m_window, scrollcallback);
         glfwGetFramebufferSize(m_window, &m_width, &m_height);
         result = true;
         return result;
@@ -161,6 +162,18 @@ namespace Lumos
             if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE) {
                 glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             }
+            // eventbus->publish(event);
+        }
+    }
+    void Window::scrollcallback(GLFWwindow* window, double xoffset, double yoffset)
+    {
+        auto* eventbus = static_cast<EventBus*>(glfwGetWindowUserPointer(window));
+        // std::println("scrolling x and y offsets: x:{}    y:{}", xoffset, yoffset);
+        if (eventbus) {
+            std::println("helo");
+            ScrollEvent event;
+            event.xoffset = xoffset;
+            event.yoffset = yoffset;
             // eventbus->publish(event);
         }
     }

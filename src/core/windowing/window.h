@@ -42,5 +42,6 @@ namespace Lumos
             static void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
             static void cursorCallback(GLFWwindow* window, double xpos, double ypos);
             static void mouseClickCallback(GLFWwindow* window, int button, int action, int mods);
+            static void scrollcallback(GLFWwindow* window, double offset, double yoffset);
     };
 }
