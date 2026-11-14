@@ -46,4 +46,5 @@ buildvs/
 compile_commands.json
 textures/
 pictures/
+testjsons/
 .vs
