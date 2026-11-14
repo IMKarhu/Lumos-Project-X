@@ -2,6 +2,7 @@
 #include "resources/resourcemanager.h"
 #include "windowing/window.h"
 #include "renderer/renderer.h"
+#include "ecs/ecs.h"
 #include <string>
 #include <memory>
 #include <chrono>
@@ -15,9 +16,15 @@ namespace Lumos
         void initEngine(int width, int height, const std::string& name);
         void run();
         void update(std::chrono::milliseconds dt);
-        void render();
+        void render(Ecs& ecs);
 
-        const ResourceManager* resourceManager() const;
+        ResourceManager* resourceManager() const;
+        std::chrono::milliseconds deltatime();
+        bool running() const;
+        void processEvents();
+
+        void setTitle(const std::string& title);
+        void waitIdle();
     private:
         bool m_initialized = false;
         bool m_running = true;
@@ -28,7 +35,6 @@ namespace Lumos
         std::unique_ptr<Renderer> m_renderer;
         std::unique_ptr<ResourceManager> m_resourcemanager;
 
-        std::chrono::milliseconds deltatime();
         void resize(int width, int height);
     };
 } //namespace Lumos

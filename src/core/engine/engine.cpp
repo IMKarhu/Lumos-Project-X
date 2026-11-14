@@ -49,104 +49,107 @@ namespace Lumos
         }
 
         m_running = true;
-
-        uint64_t framecount = 0;
-        uint64_t lastfpsframe = 0;
-        float timeaccumulator = 0.0f;
-        float curfps = 0.0f;
-
-        while(m_running)
-        {
-            m_window->pollEvents();
-            if (m_window->shouldClose()) {
-                m_running = false;
-                break;
-            }
-
-            m_deltatime = deltatime();
-            framecount++;
-            timeaccumulator += m_deltatime.count() * 0.001f;
-
-            if (timeaccumulator >= 1.0f) {
-                uint64_t framessincelastupdate = framecount - lastfpsframe;
-                double avgms = 0.0;
-                if (framessincelastupdate > 0 && timeaccumulator > 0.0f) {
-                    curfps = static_cast<float>(static_cast<double>(framessincelastupdate) / static_cast<double>(timeaccumulator));
-                    avgms = (timeaccumulator / static_cast<double>(framessincelastupdate)) * 1000.0;
-
-                } else {
-
-                    curfps = std::max(curfps, 1.0f);
-                    avgms = static_cast<double>(m_deltatime.count());
-                }
-                // std::string m_titleAndfps = std::format("Lumos engine test. Fps: {:.1f}", curfps);
-                std::string m_titleAndfps = std::format("Lumos engine test. Fps: {} | avg Ms: {}",
-                        static_cast<int>(curfps), static_cast<int>(avgms));
-                m_window->setWindowTitle(m_titleAndfps);
-            }
-
-            update(m_deltatime);
-
-            render();
-        }
-        m_renderer->waitIdle();
     }
 
     void LumosEngine::update(std::chrono::milliseconds dt)
     {
     }
 
-    void LumosEngine::render()
+    void LumosEngine::render(Ecs& ecs)
     {
         if (!m_renderer) {
             return;
         }
-        auto atlas = m_resourcemanager->getResource<Lumos::TextureAtlas>("testsprite");
-
         RenderData renderdata{};
-        renderdata.cameradata.position = {0.0f, 0.0f};
-        renderdata.cameradata.size = {640, 320};
-        RenderObject obj;
-        obj.position = {0.0f, 0.0f};
-        obj.size = {10.0f, 10.0f};
-        obj.rotation = 0.0f;
-        obj.color = {1.0f, 0.0f, 0.0f, 1.0f};
-        obj.uvrect = atlas->uv("floor2");
-        renderdata.renderobjects.push_back(obj);
-        RenderObject obj2;
-        obj2.position = {200.0f, 0.0f};
-        obj2.size = {100.0f, 100.0f};
-        obj2.rotation = 45.0f;
-        obj2.color = {1.0f, 1.0f, 0.0f, 1.0f};
-        obj2.uvrect = atlas->uv("floor");
-        renderdata.renderobjects.push_back(obj2);
-        RenderObject obj3;
-        obj3.position = {0.0f, 100.0f};
-        obj3.size = {100.0f, 100.0f};
-        obj3.rotation = 90.0f;
-        obj3.color = {0.5f, 1.0f, 1.0f, 1.0f};
-        obj3.uvrect = {0.0f, 0.0f, 1.0f, 1.0f};
-        renderdata.renderobjects.push_back(obj3);
-        RenderObject obj4;
-        obj4.position = {-200.0f, 0.0f};
-        obj4.size = {100.0f, 100.0f};
-        obj4.rotation = 90.0f;
-        obj4.color = {0.0f, 0.0f, 1.0f, 1.0f};
-        obj4.uvrect = {0.0f, 0.0f, 1.0f, 1.0f};
-        renderdata.renderobjects.push_back(obj4);
-        RenderObject obj5;
-        obj5.position = {0.0f, -100.0f};
-        obj5.size = {100.0f, 100.0f};
-        obj5.rotation = 0.0f;
-        obj5.color = {0.0f, 1.0f, 0.0f, 1.0f};
-        obj5.uvrect = {0.0f, 0.0f, 1.0f, 1.0f};
-        renderdata.renderobjects.push_back(obj5);
+        for (auto ent : ecs.view<Camera>()) {
+            auto& cam = ecs.getComponent<Camera>(ent);
+            auto& transform = ecs.getComponent<Transform>(ent);
+            renderdata.cameradata.position = transform.position;
+            renderdata.cameradata.size = transform.size;
+            renderdata.cameradata.rotation = cam.rotation;
+            renderdata.cameradata.zoom = cam.zoom;
+        }
+        for (auto ent : ecs.view<Sprite>()) {
+            auto& sprite = ecs.getComponent<Sprite>(ent);
+            auto& transform = ecs.getComponent<Transform>(ent);
+            RenderObject obj {
+                .position = transform.position,
+                .size = transform.size,
+                .rotation = transform.rotation,
+                .color = sprite.color,
+                .uvrect = sprite.uvrect
+            };
+            renderdata.renderobjects.push_back(obj);
+        }
         m_renderer->render(renderdata);
+        // auto atlas = m_resourcemanager->getResource<Lumos::TextureAtlas>("testsprite");
+        //
+        // RenderData renderdata{};
+        // renderdata.cameradata.position = {0.0f, 0.0f};
+        // renderdata.cameradata.size = {640, 320};
+        // RenderObject obj;
+        // obj.position = {0.0f, 0.0f};
+        // obj.size = {10.0f, 10.0f};
+        // obj.rotation = 0.0f;
+        // obj.color = {1.0f, 0.0f, 0.0f, 1.0f};
+        // obj.uvrect = atlas->uv("floor2");
+        // renderdata.renderobjects.push_back(obj);
+        // RenderObject obj2;
+        // obj2.position = {200.0f, 0.0f};
+        // obj2.size = {100.0f, 100.0f};
+        // obj2.rotation = 45.0f;
+        // obj2.color = {1.0f, 1.0f, 0.0f, 1.0f};
+        // obj2.uvrect = atlas->uv("floor");
+        // renderdata.renderobjects.push_back(obj2);
+        // RenderObject obj3;
+        // obj3.position = {0.0f, 100.0f};
+        // obj3.size = {100.0f, 100.0f};
+        // obj3.rotation = 90.0f;
+        // obj3.color = {0.5f, 1.0f, 1.0f, 1.0f};
+        // obj3.uvrect = {0.0f, 0.0f, 1.0f, 1.0f};
+        // renderdata.renderobjects.push_back(obj3);
+        // RenderObject obj4;
+        // obj4.position = {-200.0f, 0.0f};
+        // obj4.size = {100.0f, 100.0f};
+        // obj4.rotation = 90.0f;
+        // obj4.color = {0.0f, 0.0f, 1.0f, 1.0f};
+        // obj4.uvrect = {0.0f, 0.0f, 1.0f, 1.0f};
+        // renderdata.renderobjects.push_back(obj4);
+        // RenderObject obj5;
+        // obj5.position = {0.0f, -100.0f};
+        // obj5.size = {100.0f, 100.0f};
+        // obj5.rotation = 0.0f;
+        // obj5.color = {0.0f, 1.0f, 0.0f, 1.0f};
+        // obj5.uvrect = {0.0f, 0.0f, 1.0f, 1.0f};
+        // renderdata.renderobjects.push_back(obj5);
     }
 
-    const ResourceManager* LumosEngine::resourceManager() const
+    ResourceManager* LumosEngine::resourceManager() const
     {
         return m_resourcemanager.get();
+    }
+
+    bool LumosEngine::running() const
+    {
+        return m_running;
+    }
+
+    void LumosEngine::processEvents()
+    {
+        m_window->pollEvents();
+        if (m_window->shouldClose()) {
+            m_running = false;
+        }
+    }
+
+    void LumosEngine::setTitle(const std::string& title)
+    {
+        m_window->setWindowTitle(title);
+    }
+
+    void LumosEngine::waitIdle()
+    {
+        m_renderer->waitIdle();
     }
 
     /********PRIVATE********/

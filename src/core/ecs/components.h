@@ -6,22 +6,21 @@ namespace Lumos
 {
     struct Transform
     {
-        glm::vec3 position;
-        glm::vec3 size;
+        glm::vec2 position;
+        glm::vec2 size;
         float rotation;
     };
 
     struct Camera
     {
-        glm::vec3 wup; // global up vector ref
-        glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f); //local up direction
-        glm::vec3 right; //local right direction
-        glm::vec3 forward = glm::vec3(0.0f, 0.0f, -1.0f);
-        float fov;
-        float near;
-        float far;
-        float yaw = -90.0f;
-        float pitch = 0.0f;
+        float zoom = 1.0f;
+        float rotation = 0.0f;
+    };
+
+    struct Sprite
+    {
+        glm::vec4 color;
+        glm::vec4 uvrect;
     };
 
     struct CameraUBO

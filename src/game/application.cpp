@@ -1,189 +1,113 @@
 #include "application.h"
-#include "resources/texture.h"
-// #include "renderer/resourcemanager.h"
-// #include "renderer/buffer.h"
-// #include "defaulttypes.h"
-//
-// #include <glm/gtc/matrix_transform.hpp>
-// #include <array>
-// #include <chrono>
-// #include <format>
-// #include <stdexcept>
+#include "resources/textureatlas.h"
 
 Application::Application()
 {
-    // m_window = std::make_unique<Lumos::Window>(1280, 720, "test");
-    // m_window->setUserPtr(&m_eventbus);
-    // m_rendersystem = std::make_unique<RenderSystem>(*m_window, m_vkconfig);
-    // m_movementsystem = std::make_unique<MovementSystem>(m_eventbus);
-    // m_resourcemanager = std::make_unique<Lumos::ResourceManager>(*m_rendersystem->device());
-    //
-    // m_eventbus.subscribe<Lumos::KeyPressEvent>([&](const Lumos::KeyPressEvent& e) {
-    //         if (e.action == GLFW_PRESS && e.key == GLFW_KEY_ESCAPE) {
-    //             m_window->setWindowShouldClose(true);
-    //         }
-    //     });
-    //
-    //
-    // for (size_t i = 0; i < 10; i++) {
-    //     auto ent = new Lumos::Entity("entity");
-    //     m_entities.push_back(ent);
-    // }
-    // Ecs& ecs = m_scene.ecs();
-    // Entity player = ecs.createEntity("player");
-    // Lumos::Transform trans;
-    // trans.position = glm::vec3(0.0f, 0.0f, 2.0f);
-    // trans.size = glm::vec3(10.0f);
-    // trans.rotation = 0.0f;
-    // Lumos::Camera camera;
-    // camera.forward = glm::vec3(0.0f, 0.0f, -1.0f);
-    // camera.up = glm::vec3(0.0f, 1.0f, 0.0f);
-    // camera.far = 100.0f;
-    // camera.near = 0.1f;
-    // Lumos::CameraUBO camubo;
-    // auto view = lookAt(trans.position, trans.position + camera.forward, camera.up);
-    // auto proj = glm::perspective(glm::radians(45.0f),
-    //         16/(float)9,
-    //         camera.near, camera.far);
-    // proj[1][1] *= -1;
-    // camubo.viewproj = proj * view;
-    // ecs.addComponent(player, trans);
-    // ecs.addComponent(player, camera);
-    // ecs.addComponent(player, camubo);
-    // for (size_t i = 0; i < 50; i++) {
-    //     for (size_t j = 0; j < 50; j++) {
-    //         Entity ent = ecs.createEntity("cube");
-    //         Lumos::Transform t;
-    //         t.size = glm::vec3(1.0f);
-    //         t.rotation = 0.0f;
-    //         t.position = glm::vec3(0.0f+i, 0.0f, 0.0f-j);
-    //         ecs.addComponent(ent, t);
-    //         Lumos::Model m;
-    //         auto tr = glm::translate(glm::mat4(1.0f), t.position);
-    //         tr = glm::rotate(tr, glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0f));
-    //         tr = glm::scale(tr, t.size);
-    //         m.model = tr;
-    //         ecs.addComponent(ent, m);
-    //         Lumos::Size indexsize;
-    //         indexsize.size = static_cast<uint32_t>(DefaultTypes::Cube::indices.size());
-    //         ecs.addComponent(ent, indexsize);
-    //         std::println("creating cube");
-    //     }
-    // }
-    // initializeResources();
-    // m_rendersystem->createRenderers(*m_resourcemanager, m_vkconfig);
 }
 
 void Application::initEngine()
 {
     m_engine.initEngine(1280, 720, "LumosEngine test");
+    auto atlas = m_engine.resourceManager()->getResource<Lumos::TextureAtlas>("testsprite");
+    auto cam = m_ecs.createEntity("cameraEntity");
+    Lumos::Transform cameratransform;
+    Lumos::Camera camera;
+    cameratransform.position = {0.0f, 0.0f};
+    cameratransform.size = {640, 320};
+    camera.rotation = 1.0f;
+    camera.zoom = 1.0f;
+    m_ecs.addComponent(cam, cameratransform);
+    m_ecs.addComponent(cam, camera);
+    auto ent = m_ecs.createEntity("entity1");
+    Lumos::Transform transform;
+    Lumos::Sprite sprite;
+    transform.position = {0.0f, 0.0f};
+    transform.size = {10.0f, 10.0f};
+    transform.rotation = 0.0f;
+    sprite.color = {1.0f, 0.0f, 0.0f, 1.0f};
+    sprite.uvrect = atlas->uv("floor2");
+    m_ecs.addComponent(ent, transform);
+    m_ecs.addComponent(ent, sprite);
+    // m_ecs.addComponent(ent, transform);
+    // RenderData renderdata{};
+    // renderdata.cameradata.position = {0.0f, 0.0f};
+    // renderdata.cameradata.size = {640, 320};
+    // RenderObject obj;
+    // obj.position = {0.0f, 0.0f};
+    // obj.size = {10.0f, 10.0f};
+    // obj.rotation = 0.0f;
+    // obj.color = {1.0f, 0.0f, 0.0f, 1.0f};
+    // obj.uvrect = atlas->uv("floor2");
+    // renderdata.renderobjects.push_back(obj);
+    // RenderObject obj2;
+    // obj2.position = {200.0f, 0.0f};
+    // obj2.size = {100.0f, 100.0f};
+    // obj2.rotation = 45.0f;
+    // obj2.color = {1.0f, 1.0f, 0.0f, 1.0f};
+    // obj2.uvrect = atlas->uv("floor");
+    // renderdata.renderobjects.push_back(obj2);
+    // RenderObject obj3;
+    // obj3.position = {0.0f, 100.0f};
+    // obj3.size = {100.0f, 100.0f};
+    // obj3.rotation = 90.0f;
+    // obj3.color = {0.5f, 1.0f, 1.0f, 1.0f};
+    // obj3.uvrect = {0.0f, 0.0f, 1.0f, 1.0f};
+    // renderdata.renderobjects.push_back(obj3);
+    // RenderObject obj4;
+    // obj4.position = {-200.0f, 0.0f};
+    // obj4.size = {100.0f, 100.0f};
+    // obj4.rotation = 90.0f;
+    // obj4.color = {0.0f, 0.0f, 1.0f, 1.0f};
+    // obj4.uvrect = {0.0f, 0.0f, 1.0f, 1.0f};
+    // renderdata.renderobjects.push_back(obj4);
+    // RenderObject obj5;
+    // obj5.position = {0.0f, -100.0f};
+    // obj5.size = {100.0f, 100.0f};
+    // obj5.rotation = 0.0f;
+    // obj5.color = {0.0f, 1.0f, 0.0f, 1.0f};
+    // obj5.uvrect = {0.0f, 0.0f, 1.0f, 1.0f};
+    // renderdata.renderobjects.push_back(obj5);
+
 }
 
 void Application::run()
 {
     m_engine.run();
-    // auto start = std::chrono::high_resolution_clock::now();
-    //
-    // float framecount = 0.0f;
-    // float timeaccumulator = 0.0f;
-    // float curfps = 0.0f;
-#if 0
-    // while(!m_window->shouldClose()) {
-    //     m_window->pollEvents();
-    //     m_eventqueue.process(m_eventbus);
-    //     auto current = std::chrono::high_resolution_clock::now();
-    //     float dt = std::chrono::duration<float>(current - start).count();
-    //     start = current;
-    //
-    //     timeaccumulator += dt;
-    //     framecount += 1.0f;
-    //
-    //     if (timeaccumulator >= 1.0f) {
-    //         curfps = framecount / timeaccumulator;
-    //         m_titleAndfps = std::format("Lumos engine test. Fps: {:.1f}", curfps);
-    //         m_window->setWindowTitle(m_titleAndfps);
-    //         framecount = 0.0f;
-    //         timeaccumulator = 0.0f;
-    //     }
-    //     // m_movementsystem->update(m_scene.ecs(), dt);
-    //     // m_rendersystem->update(m_scene.ecs(), *m_resourcemanager, dt);
-    // }
-    // m_rendersystem->waitForDestroy();
-#endif
-}
 
-void Application::initializeResources()
-{
-    // const std::array globpool {
-    //     Lumos::PoolConfig {
-    //         .count = m_vkconfig.framesinflight,
-    //         .type = Lumos::DescriptorType::Uniform
-    //     }
-    // };
-    // const std::array globbindings {
-    //     Lumos::BindingConfig {
-    //         .binding = 0,
-    //         .type = Lumos::DescriptorType::Uniform,
-    //         .count = 1,
-    //         .flags = Lumos::StageFlags::Vertex
-    //     }
-    // };
-    // m_resourcemanager->create("global", globpool, globbindings, m_vkconfig.framesinflight);
-    // std::vector<Lumos::Buffer*> ubos;
-    // for (size_t i = 0; i < m_vkconfig.framesinflight; i++) {
-    //     auto buf = new Lumos::Buffer(*m_rendersystem->device(),
-    //             sizeof(Lumos::CameraUBO),
-    //             VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-    //             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-    //     buf->map();
-    //     ubos.push_back(std::move(buf));
-    // }
-    // m_resourcemanager->cacheBuffers("global ubos", ubos);
-    // for (size_t i = 0; i < m_vkconfig.framesinflight; i++) {
-    //     Lumos::DescriptorWriter writer;
-    //     writer.writeBuffer(0, *m_resourcemanager->getBufferByNameAndIndex("global ubos", i),
-    //             sizeof(Lumos::CameraUBO),
-    //             Lumos::DescriptorWriter::UNIFORM);
-    //     writer.update(*m_rendersystem->device(), m_resourcemanager->getSetByNameAndIndex("global", i));
-    // }
-    // // bool ResourceManager::createBuffer(const std::string& name, void* size, void* data, VkBufferUsageFlags type)
-    //
-    // VkDeviceSize size = sizeof(DefaultTypes::Cube::vertices[0]) * DefaultTypes::Cube::vertices.size();
-    // auto buffers = m_resourcemanager->createBuffer("cubevertex",
-    //                                               (void*)size,
-    //                                               (void*)DefaultTypes::Cube::vertices.data(),
-    //                                               VK_BUFFER_USAGE_VERTEX_BUFFER_BIT); 
-    // if (buffers.empty()) {
-    //     throw std::runtime_error("failed to create a vertex buffer and vector is empty");
-    // }
-    // m_resourcemanager->cacheBuffers("cubevertex", buffers);
-    //
-    // size = sizeof(DefaultTypes::Cube::indices[0]) * DefaultTypes::Cube::indices.size();
-    // buffers = m_resourcemanager->createBuffer("cubeindex",
-    //                                               (void*)size,
-    //                                               (void*)DefaultTypes::Cube::indices.data(),
-    //                                               VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
-    // if (buffers.empty()) {
-    //     throw std::runtime_error("failed to create a index buffer and vector is empty");
-    // }
-    // m_resourcemanager->cacheBuffers("cubeindex", buffers);
-    //
-    //
-    // //presentation stuff
-    // const std::array presentationpool {
-    //     Lumos::PoolConfig {
-    //         .count = m_vkconfig.framesinflight,
-    //         .type = Lumos::DescriptorType::CombinedImageSampler
-    //     },
-    // };
-    // const std::array presentationbindings {
-    //     Lumos::BindingConfig {
-    //         .binding = 0,
-    //         .type = Lumos::DescriptorType::CombinedImageSampler,
-    //         .count = 1,
-    //         .flags = Lumos::StageFlags::Fragment
-    //     },
-    // };
-    // m_resourcemanager->create("presentation", presentationpool, presentationbindings, m_vkconfig.framesinflight);
+    uint64_t framecount = 0;
+    uint64_t lastfpsframe = 0;
+    float timeaccumulator = 0.0f;
+    float curfps = 0.0f;
+
+    while(m_engine.running())
+    {
+        m_engine.processEvents();
+        m_deltatime = m_engine.deltatime();
+        framecount++;
+        timeaccumulator += m_deltatime.count() * 0.001f;
+
+        if (timeaccumulator >= 1.0f) {
+            uint64_t framessincelastupdate = framecount - lastfpsframe;
+            double avgms = 0.0;
+            if (framessincelastupdate > 0 && timeaccumulator > 0.0f) {
+                curfps = static_cast<float>(static_cast<double>(framessincelastupdate) / static_cast<double>(timeaccumulator));
+                avgms = (timeaccumulator / static_cast<double>(framessincelastupdate)) * 1000.0;
+
+            } else {
+
+                curfps = std::max(curfps, 1.0f);
+                avgms = static_cast<double>(m_deltatime.count());
+            }
+            // std::string m_titleAndfps = std::format("Lumos engine test. Fps: {:.1f}", curfps);
+            std::string m_titleAndfps = std::format("Lumos engine test. Fps: {} | avg Ms: {}",
+                    static_cast<int>(curfps), static_cast<int>(avgms));
+            m_engine.setTitle(m_titleAndfps);
+        }
+
+        m_engine.update(m_deltatime);
+
+        m_engine.render(m_ecs);
+    }
+    m_engine.waitIdle();
 }
 
