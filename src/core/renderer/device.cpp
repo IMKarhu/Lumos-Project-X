@@ -4,6 +4,7 @@
 #include "swapchain.h"
 #include "buffer.h"
 #include "errorcheck.h"
+#include "engine/logging.h"
 
 #include <stdexcept>
 #include <cstring>
@@ -27,7 +28,23 @@ namespace Lumos
             const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
             void* pUserData) {
 
-        std::println("validation layer: {}", pCallbackData->pMessage);
+        ConsoleLogger logger;
+        LogLevel level;
+        switch(messageSeverity)
+        {
+            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
+                level = LogLevel::Error;
+                break;
+            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+                level = LogLevel::Warning;
+                break;
+            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
+            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_FLAG_BITS_MAX_ENUM_EXT:
+            default:
+                level = LogLevel::Info;
+        }
+        LS_LOG(logger, level, pCallbackData->pMessage);
 
         return VK_FALSE;
     }

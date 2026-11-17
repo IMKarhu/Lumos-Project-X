@@ -215,7 +215,7 @@ namespace Lumos
                                                 &m_imageindex);
         if (result == VK_ERROR_OUT_OF_DATE_KHR || m_framebufferresized)
         {
-            std::println("swapchain out of date\n");
+            LS_LOG_INFO(m_consolelogger, "swapchain out of date");
             recreateSwapchain();
             // return false;
         }
@@ -268,7 +268,7 @@ namespace Lumos
 
         VkResult res = vkQueuePresentKHR(m_device->presentQueue(), &presentinfo);
         if (res == VK_ERROR_OUT_OF_DATE_KHR || res == VK_SUBOPTIMAL_KHR || m_framebufferresized) {
-            std::println("swapchain out of date, suboptimal or framebuffer was resized\n");
+            LS_LOG_INFO(m_consolelogger, "swapchain out of date, suboptimal or framebuffer was resized");
             recreateSwapchain();
         }
         else if (res != VK_SUCCESS) {
@@ -625,7 +625,6 @@ namespace Lumos
 
     void Renderer::recreateSwapchain()
     {
-        std::println("recreate called");
         VK_CHECK(vkDeviceWaitIdle(m_device->device()));
         auto replacement = std::make_unique<SwapChain>(*m_device, m_window, m_config, m_swapchain->swapchain());
         m_swapchain = std::move(replacement);
@@ -634,7 +633,6 @@ namespace Lumos
 
     void Renderer::createDescriptorPool()
     {
-        std::println("create descriptor pool");
         std::array<VkDescriptorPoolSize, 4> poolsizes{};
         poolsizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         poolsizes[0].descriptorCount = static_cast<uint32_t>(m_framedata.size());

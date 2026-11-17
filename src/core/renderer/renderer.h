@@ -5,6 +5,7 @@
 
 #include "rendererconfig.h"
 #include "renderdata.h"
+#include "engine/logging.h"
 #include <vulkan/vulkan.h>
 
 namespace Lumos
@@ -87,6 +88,7 @@ namespace Lumos
         void updateTextureDescriptor(VkImageView imageview, VkSampler sampler);
         glm::mat4 viewproj(const CameraData& camera) const;
         Window& m_window;
+        ConsoleLogger m_consolelogger;
         std::unique_ptr<Device> m_device;
         std::unique_ptr<SwapChain> m_swapchain;
         RendererConfig m_config;

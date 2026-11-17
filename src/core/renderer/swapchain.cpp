@@ -1,6 +1,7 @@
 #include "swapchain.h"
 #include "device.h"
 #include "../windowing/window.h"
+#include "engine/logging.h"
 #include "errorcheck.h"
 
 #include <print>
@@ -148,11 +149,12 @@ namespace Lumos
 
     VkSurfaceFormatKHR SwapChain::swapchainSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& formats)
     {
+        ConsoleLogger logger;
         for (auto& format : std::as_const(formats))
         {
             if (format.format == VK_FORMAT_B8G8R8A8_SRGB && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
             {
-                std::println("SwapChain surface format: VK_FORMAT_B8G8R8A8_SRGB and colorSpace: VK_COLOR_SPACE_SRGB_NONLINEAR_KHR\n");
+                LS_LOG_INFO(logger,"SwapChain surface format: VK_FORMAT_B8G8R8A8_SRGB and colorSpace: VK_COLOR_SPACE_SRGB_NONLINEAR_KHR");
                 return format;
             }
         }
@@ -161,12 +163,13 @@ namespace Lumos
 
     VkPresentModeKHR SwapChain::swapchainPresentMode(const std::vector<VkPresentModeKHR>& presentmodes)
     {
+        ConsoleLogger logger;
         if (!m_config.vsync) {
             for (auto& presentMode : std::as_const(presentmodes))
             {
                 if (presentMode == VK_PRESENT_MODE_MAILBOX_KHR)
                 {
-                    std::println("using VK_PRESENT_MODE_MAILBOX_KHR");
+                    LS_LOG_INFO(logger, "using VK_PRESENT_MODE_MAILBOX_KHR");
                     return presentMode;
                 }
             }
@@ -174,12 +177,12 @@ namespace Lumos
             //maybe fallback to immediated mode?
             for(auto& presentMode : std::as_const(presentmodes)) {
                 if (presentMode == VK_PRESENT_MODE_IMMEDIATE_KHR) {
-                    std::println("using VK_PRESENT_MODE_IMMEDIATE_KHR");
+                    LS_LOG_INFO(logger, "using VK_PRESENT_MODE_IMMEDIATE_KHR");
                     return presentMode;
                 }
             }
         }
-        std::println("using VK_PRESENT_MODE_FIFO_KHR");
+        LS_LOG_INFO(logger, "using VK_PRESENT_MODE_FIFO_KHR");
         return VK_PRESENT_MODE_FIFO_KHR;
     }
 
