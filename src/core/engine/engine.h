@@ -1,7 +1,9 @@
 #pragma once
 #include "resources/resourcemanager.h"
 #include "windowing/window.h"
+#include "windowing/events.h"
 #include "renderer/renderer.h"
+#include "logging.h"
 #include "ecs/ecs.h"
 #include <string>
 #include <memory>
@@ -19,6 +21,7 @@ namespace Lumos
         void render(Ecs& ecs);
 
         ResourceManager* resourceManager() const;
+        Window* window() const;
         std::chrono::milliseconds deltatime();
         bool running() const;
         void processEvents();
@@ -34,6 +37,7 @@ namespace Lumos
         std::unique_ptr<Window> m_window;
         std::unique_ptr<Renderer> m_renderer;
         std::unique_ptr<ResourceManager> m_resourcemanager;
+        EventBus m_eventbus;
 
         void resize(int width, int height);
     };

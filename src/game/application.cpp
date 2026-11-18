@@ -8,6 +8,9 @@ Application::Application()
 void Application::initEngine()
 {
     m_engine.initEngine(1280, 720, "LumosEngine test");
+    m_engine.window()->setScrollCallback([this](double x, double y) {
+            m_inputsystem.updateScrolling(x, y);
+    });
     auto atlas = m_engine.resourceManager()->getResource<Lumos::TextureAtlas>("testsprite");
     auto cam = m_ecs.createEntity("cameraEntity");
     Lumos::Transform cameratransform;
@@ -28,46 +31,6 @@ void Application::initEngine()
     sprite.uvrect = atlas->uv("floor2");
     m_ecs.addComponent(ent, transform);
     m_ecs.addComponent(ent, sprite);
-    // m_ecs.addComponent(ent, transform);
-    // RenderData renderdata{};
-    // renderdata.cameradata.position = {0.0f, 0.0f};
-    // renderdata.cameradata.size = {640, 320};
-    // RenderObject obj;
-    // obj.position = {0.0f, 0.0f};
-    // obj.size = {10.0f, 10.0f};
-    // obj.rotation = 0.0f;
-    // obj.color = {1.0f, 0.0f, 0.0f, 1.0f};
-    // obj.uvrect = atlas->uv("floor2");
-    // renderdata.renderobjects.push_back(obj);
-    // RenderObject obj2;
-    // obj2.position = {200.0f, 0.0f};
-    // obj2.size = {100.0f, 100.0f};
-    // obj2.rotation = 45.0f;
-    // obj2.color = {1.0f, 1.0f, 0.0f, 1.0f};
-    // obj2.uvrect = atlas->uv("floor");
-    // renderdata.renderobjects.push_back(obj2);
-    // RenderObject obj3;
-    // obj3.position = {0.0f, 100.0f};
-    // obj3.size = {100.0f, 100.0f};
-    // obj3.rotation = 90.0f;
-    // obj3.color = {0.5f, 1.0f, 1.0f, 1.0f};
-    // obj3.uvrect = {0.0f, 0.0f, 1.0f, 1.0f};
-    // renderdata.renderobjects.push_back(obj3);
-    // RenderObject obj4;
-    // obj4.position = {-200.0f, 0.0f};
-    // obj4.size = {100.0f, 100.0f};
-    // obj4.rotation = 90.0f;
-    // obj4.color = {0.0f, 0.0f, 1.0f, 1.0f};
-    // obj4.uvrect = {0.0f, 0.0f, 1.0f, 1.0f};
-    // renderdata.renderobjects.push_back(obj4);
-    // RenderObject obj5;
-    // obj5.position = {0.0f, -100.0f};
-    // obj5.size = {100.0f, 100.0f};
-    // obj5.rotation = 0.0f;
-    // obj5.color = {0.0f, 1.0f, 0.0f, 1.0f};
-    // obj5.uvrect = {0.0f, 0.0f, 1.0f, 1.0f};
-    // renderdata.renderobjects.push_back(obj5);
-
 }
 
 void Application::run()
@@ -98,7 +61,6 @@ void Application::run()
                 curfps = std::max(curfps, 1.0f);
                 avgms = static_cast<double>(m_deltatime.count());
             }
-            // std::string m_titleAndfps = std::format("Lumos engine test. Fps: {:.1f}", curfps);
             std::string m_titleAndfps = std::format("Lumos engine test. Fps: {} | avg Ms: {}",
                     static_cast<int>(curfps), static_cast<int>(avgms));
             m_engine.setTitle(m_titleAndfps);

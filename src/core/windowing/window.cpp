@@ -93,6 +93,11 @@ namespace Lumos
         m_resizecallback = std::move(callback);
     }
 
+    void Window::setScrollCallback(std::function<void(double, double)> callback)
+    {
+        m_scrollcallback = std::move(callback);
+    }
+
 
     /*********PRIVATE********/
     void Window::windowResizeCallback(GLFWwindow *window, int width, int height)
@@ -108,14 +113,10 @@ namespace Lumos
 
     void Window::keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
     {
-        auto* eventbus = static_cast<EventBus*>(glfwGetWindowUserPointer(window));
-        if (eventbus) {
-            KeyPressEvent event;
-            event.key = key;
-            event.scancode = scancode;
-            event.action = action;
-            event.mods = mods;
-            // eventbus->publish(event);
+        auto* w = static_cast<Window*>(glfwGetWindowUserPointer(window));
+        std::println("key: {} action: {}", key, action);
+        if(w->m_keycallback) {
+            w->m_keycallback(key, action);
         }
     }
 
@@ -167,14 +168,9 @@ namespace Lumos
     }
     void Window::scrollcallback(GLFWwindow* window, double xoffset, double yoffset)
     {
-        auto* eventbus = static_cast<EventBus*>(glfwGetWindowUserPointer(window));
-        // std::println("scrolling x and y offsets: x:{}    y:{}", xoffset, yoffset);
-        if (eventbus) {
-            std::println("helo");
-            ScrollEvent event;
-            event.xoffset = xoffset;
-            event.yoffset = yoffset;
-            // eventbus->publish(event);
+        auto* w = static_cast<Window*>(glfwGetWindowUserPointer(window));
+        if (w->m_scrollcallback) {
+            w->m_scrollcallback(xoffset, yoffset);
         }
     }
 }// namespace Lumos

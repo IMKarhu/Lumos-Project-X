@@ -9,12 +9,19 @@ namespace Lumos
         glm::vec2 position;
         glm::vec2 size;
         float rotation;
+
+        bool moveforward = false;
+        bool movebackwards = false;
+        bool moveleft = false;
+        bool moveright = false;
     };
 
     struct Camera
     {
         float zoom = 1.0f;
         float rotation = 0.0f;
+
+        bool zoomed = false;
     };
 
     struct Sprite

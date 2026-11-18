@@ -27,6 +27,7 @@ namespace Lumos
             void setWindowTitle(const std::string& title);
             void setWindowShouldClose(bool close);
             void setResizeCallback(std::function<void(int, int)> callback);
+            void setScrollCallback(std::function<void(double, double)> callback);
         private:
             GLFWwindow *m_window = nullptr;
             int m_width = 0;
@@ -37,6 +38,7 @@ namespace Lumos
             std::function<void(int, bool)> m_keycallback;
             std::function<void(double, double)> m_cursorposcallback;
             std::function<void(int, int, int)> m_cursorclickcallback;
+            std::function<void(double, double)> m_scrollcallback;
 
             static void windowResizeCallback(GLFWwindow *window, int width, int height);
             static void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);

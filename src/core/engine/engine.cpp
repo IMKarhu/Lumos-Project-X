@@ -18,8 +18,14 @@ namespace Lumos
                 m_initialized = false;
             } else {
                 m_window->setWindowTitle(name);
-                m_window->setResizeCallback([this](int width, int height){
+                m_window->setResizeCallback([this](int width, int height) {
                         resize(width, height);
+                });
+                m_window->setScrollCallback([this](double x, double y) {
+                        ScrollEvent event;
+                        event.xoffset = x;
+                        event.yoffset = y;
+                        m_eventbus.publish(event);
                 });
                 m_initialized = true;
             }
@@ -35,8 +41,7 @@ namespace Lumos
             desc.regions["test"] = {{0, 0}, {64, 32}};
             desc.regions["test2"] = {{64, 0}, {64, 32}};
             auto tex = m_resourcemanager->load<Lumos::TextureAtlas>("testsprite", "../testjsons/test.json");
-            auto res = m_resourcemanager->getResource<Lumos::TextureAtlas>("testsprite");
-            m_renderer->setTexture(res->texture().image(), res->texture().sampler());
+            m_renderer->setTexture(tex->texture().image(), tex->texture().sampler());
 
             m_initialized = true;
         }
@@ -127,6 +132,11 @@ namespace Lumos
     ResourceManager* LumosEngine::resourceManager() const
     {
         return m_resourcemanager.get();
+    }
+
+    Window* LumosEngine::window() const
+    {
+        return m_window.get();
     }
 
     bool LumosEngine::running() const

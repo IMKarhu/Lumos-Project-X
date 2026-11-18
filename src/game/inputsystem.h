@@ -1,13 +1,19 @@
 #pragma once
-#include <unordered_set>
-#include "windowing/events.h"
 
+namespace Lumos
+{
+    class EventBus;
+}
+class Ecs;
 class InputSystem
 {
 public:
-    InputSystem();
+    InputSystem(Ecs& ecs);
+
+    void setEventSystem(Lumos::EventBus& eventbus);
+    void updateScrolling(double x, double y);
+    void updatekeycalls(int key, bool pressed);
 private:
-    Lumos::EventBus m_eventbus;
-    Lumos::EventQueue m_eventqueue;
-    std::unordered_set<int> m_heldkeys;
+    Ecs& m_ecs;
+    Lumos::EventBus* m_eventbus;
 };
