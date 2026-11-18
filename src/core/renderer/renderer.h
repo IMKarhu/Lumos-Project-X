@@ -86,7 +86,6 @@ namespace Lumos
         void recreateSwapchain();
         //temp
         void updateTextureDescriptor(VkImageView imageview, VkSampler sampler);
-        glm::mat4 viewproj(const CameraData& camera) const;
         Window& m_window;
         ConsoleLogger m_consolelogger;
         std::unique_ptr<Device> m_device;
@@ -126,6 +125,8 @@ namespace Lumos
 
         VkDescriptorSetLayout m_texturelayout = VK_NULL_HANDLE;
         VkDescriptorSet m_textureset;
+
+        std::unique_ptr<GraphicsPipeline> m_debuggridpipeline;
 
     };
 } //namespace Lumos

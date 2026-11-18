@@ -3,33 +3,21 @@
 #include "device.h"
 #include "renderdata.h"
 #include <fstream>
-#include <utility>
-#include <array>
 
 namespace Lumos
 {
-    GraphicsPipeline::GraphicsPipeline(Device& device,
-            VkDescriptorSetLayout camerasetlayout,
-            VkDescriptorSetLayout entitysetlayout,
-            VkDescriptorSetLayout texturesetlayout, 
-            VkFormat colorformat)
+    GraphicsPipeline::GraphicsPipeline(Device& device, const PipelineConfig& config)
         : m_device(device)
-        , m_camerasetlayout(camerasetlayout)
-        , m_entitysetlayout(entitysetlayout)
-        , m_texturesetlayout(texturesetlayout)
-        , m_colorformat(colorformat)
+        , m_config(config)
     {
         createPipelineLayout();
-        createPipeline("shaders/sprite.spv");
+        createPipeline(m_config.shaderfile);
     }
 
     GraphicsPipeline::~GraphicsPipeline()
     {
         vkDestroyPipeline(m_device.device(), m_pipeline, nullptr);
         vkDestroyPipelineLayout(m_device.device(), m_layout, nullptr);
-        vkDestroyDescriptorSetLayout(m_device.device(), m_camerasetlayout, nullptr);
-        vkDestroyDescriptorSetLayout(m_device.device(), m_entitysetlayout, nullptr);
-        vkDestroyDescriptorSetLayout(m_device.device(), m_texturesetlayout, nullptr);
     }
 
     VkPipelineLayout GraphicsPipeline::layout() const noexcept
@@ -70,7 +58,7 @@ namespace Lumos
 
         VkPipelineInputAssemblyStateCreateInfo inputassembly {
             .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
-            .topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+            .topology = m_config.topology,
             .primitiveRestartEnable = VK_FALSE
         };
 
@@ -141,7 +129,7 @@ namespace Lumos
         VkPipelineRenderingCreateInfo renderinginfo {
             .sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
             .colorAttachmentCount = 1,
-            .pColorAttachmentFormats = &m_colorformat,
+            .pColorAttachmentFormats = &m_config.colorformat,
         };
 
         VkGraphicsPipelineCreateInfo pipelineinfo {
@@ -176,17 +164,17 @@ namespace Lumos
 
     void GraphicsPipeline::createPipelineLayout()
     {
+        //TODO: pushconstants should probably be defined in config
         // VkPushConstantRange pushconstantrange{
         //     .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
         //     .offset = 0,
         //     .size = sizeof(ObjectPushConstant)
         // };
 
-        std::array<VkDescriptorSetLayout, 3> layouts {m_camerasetlayout, m_entitysetlayout, m_texturesetlayout};
         VkPipelineLayoutCreateInfo info{
             .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-            .setLayoutCount = static_cast<uint32_t>(layouts.size()),
-            .pSetLayouts = layouts.data()
+            .setLayoutCount = static_cast<uint32_t>(m_config.layouts.size()),
+            .pSetLayouts = m_config.layouts.data()
             // .pushConstantRangeCount = 1,
             // .pPushConstantRanges = &pushconstantrange
         };

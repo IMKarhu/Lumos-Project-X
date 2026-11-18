@@ -71,6 +71,7 @@ namespace Lumos
             auto& transform = ecs.getComponent<Transform>(ent);
             renderdata.cameradata.position = transform.position;
             renderdata.cameradata.size = transform.size;
+            renderdata.cameradata.cameratype = cam.cameratype;
             renderdata.cameradata.rotation = cam.rotation;
             renderdata.cameradata.zoom = cam.zoom;
         }

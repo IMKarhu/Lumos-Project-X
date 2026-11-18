@@ -12,6 +12,7 @@
 #include "sampler.h"
 #include "pipeline.h"
 #include "errorcheck.h"
+#include "math/projection.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace Lumos
@@ -30,11 +31,18 @@ namespace Lumos
         createDescriptorPool();
         allocateCameraDescriptors();
         updateCameraSets();
-        m_defaultpipeline = std::make_unique<GraphicsPipeline>(*m_device,
-                m_camerasetlayout,
-                m_entitysetlayout,
-                m_texturelayout,
-                m_swapchain->imageformat());
+        const std::array descriptorlayouts {
+            m_camerasetlayout,
+            m_entitysetlayout,
+            m_texturelayout
+        };
+        PipelineConfig pipelineconfig {
+            .shaderfile = "shaders/sprite.spv",
+            .layouts = descriptorlayouts,
+            .colorformat = m_swapchain->imageformat(),
+            .topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST
+        };
+        m_defaultpipeline = std::make_unique<GraphicsPipeline>(*m_device, pipelineconfig);
     }
 
     Renderer::~Renderer()
@@ -50,6 +58,10 @@ namespace Lumos
             vkDestroySemaphore(m_device->device(), m_framedata[i].renderfinishedsemaphore, nullptr);
             vkDestroyFence(m_device->device(), m_framedata[i].inflightfence, nullptr);
         }
+        vkDestroyDescriptorSetLayout(m_device->device(), m_camerasetlayout, nullptr);
+        vkDestroyDescriptorSetLayout(m_device->device(), m_entitysetlayout, nullptr);
+        vkDestroyDescriptorSetLayout(m_device->device(), m_texturelayout, nullptr);
+
         vkDestroyCommandPool(m_device->device(), m_commandpool, nullptr);
     }
 
@@ -397,7 +409,6 @@ namespace Lumos
         std::vector<GpuEntity> m_entities;
         m_entities.reserve(renderdata.renderobjects.size());
         for (const auto& object : renderdata.renderobjects) {
-            // const auto& object = renderdata.renderobjects.front();
             GpuEntity ent {
                 .positionAndsize = {
                     object.position.x,
@@ -423,7 +434,7 @@ namespace Lumos
         }
 
         CameraUBO ubo{};
-        ubo.viewproj = viewproj(renderdata.cameradata);
+        ubo.viewproj = Math::orthoViewProj(renderdata.cameradata);
         auto& buffer = *m_framedata[m_imageindex].camerabuffer;
         std::memcpy(buffer.map(), &ubo, sizeof(CameraUBO));
         buffer.unmap();
@@ -682,28 +693,6 @@ namespace Lumos
             .pSetLayouts = &m_texturelayout
         };
         VK_CHECK(vkAllocateDescriptorSets(m_device->device(), &textureallocinfo, &m_textureset));
-    }
-
-    glm::mat4 Renderer::viewproj(const CameraData& camera) const
-    {
-        const glm::vec2 halfsize = camera.size / (2.0f * camera.zoom);
-        const glm::mat4 projection = glm::ortho(
-                camera.position.x - halfsize.x,
-                camera.position.x + halfsize.x,
-                camera.position.y - halfsize.y,
-                camera.position.y + halfsize.y,
-                -1.0f,
-                 1.0f);
-        glm::mat4 view = glm::rotate(
-                glm::mat4(1.0f),
-                -camera.rotation,
-                glm::vec3(0.0f, 0.0f, 1.0f));
-
-        view = view * glm::translate(
-                glm::mat4(1.0f),
-                glm::vec3(-camera.position,
-                0.0f));
-        return projection * view;
     }
 
     void Renderer::updateTextureDescriptor(VkImageView imageview, VkSampler sampler)

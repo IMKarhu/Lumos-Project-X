@@ -13,14 +13,18 @@ namespace Lumos
      */
     class Device;
 
+    struct PipelineConfig
+    {
+        std::string shaderfile;
+        std::span<const VkDescriptorSetLayout> layouts;
+        VkFormat colorformat;
+        VkPrimitiveTopology topology;
+    };
+
     class GraphicsPipeline
     {
     public:
-        GraphicsPipeline(Device& device,
-                VkDescriptorSetLayout camerasetlayout,
-                VkDescriptorSetLayout entitysetlayout,
-                VkDescriptorSetLayout texturesetlayout, 
-                VkFormat colorformat = VK_FORMAT_B8G8R8A8_SRGB);
+        explicit GraphicsPipeline(Device& device, const PipelineConfig& config);
         ~GraphicsPipeline();
 
         GraphicsPipeline(const GraphicsPipeline&) = delete;
@@ -34,16 +38,9 @@ namespace Lumos
         void createPipelineLayout();
         VkShaderModule shaderModule(const std::vector<char>& buffer, VkDevice device);
         Device& m_device;
+        PipelineConfig m_config;
         VkPipeline m_pipeline = VK_NULL_HANDLE;
         VkPipelineLayout m_layout = VK_NULL_HANDLE;
-        VkDescriptorSetLayout m_camerasetlayout = VK_NULL_HANDLE;
-        VkDescriptorSetLayout m_entitysetlayout = VK_NULL_HANDLE;
-        VkDescriptorSetLayout m_texturesetlayout = VK_NULL_HANDLE;
-
-        VkFormat m_colorformat = VK_FORMAT_B8G8R8A8_SRGB;
-
-
-
     };
     std::vector<char> readFile(const std::string& filename);
 } //namespace Lumos

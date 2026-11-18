@@ -4,8 +4,14 @@
 
 namespace Lumos
 {
+    enum class CameraType
+    {
+        Orthographic,
+        Perspective
+    };
     struct CameraData
     {
+        CameraType cameratype = CameraType::Orthographic;
         glm::vec2 position;
         glm::vec2 size;
         float zoom = 1.0f;
