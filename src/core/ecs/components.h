@@ -1,6 +1,7 @@
 #pragma once
 #include <glm/glm.hpp>
 #include <string>
+#include "renderer/renderdata.h"
 
 namespace Lumos
 {
@@ -18,6 +19,7 @@ namespace Lumos
 
     struct Camera
     {
+        CameraType cameratype = CameraType::Orthographic;
         float zoom = 1.0f;
         float rotation = 0.0f;
 
