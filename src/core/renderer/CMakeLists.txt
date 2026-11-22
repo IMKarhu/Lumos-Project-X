@@ -9,24 +9,15 @@ target_sources(lumos_core
         device.cpp
         pipeline.h
         pipeline.cpp
+        pipelinebuilder.h
+        pipelinebuilder.cpp
         buffer.h
         buffer.cpp
         image.h
         image.cpp
         sampler.h
         sampler.cpp
-        # commandpool.h
-        # commandpool.cpp
-        # renderfactory.h
-        # texture.h
-        # texture.cpp
-        # descriptor.h
-        # descriptor.cpp
         # vertex.h
-        # baserenderer.h
-        # json.hpp
-        # scene.h
-        # scene.cpp
 )
 
 

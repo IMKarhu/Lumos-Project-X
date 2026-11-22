@@ -45,6 +45,7 @@ namespace Lumos
         VkSurfaceKHR surface() const;
         VkQueue graphicsQueue() const;
         VkQueue presentQueue() const;
+        bool initialized() const;
 
         QueueFamilyIndices findQueueFamilies(VkPhysicalDevice pdevice);
         SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice pdevice);
@@ -81,6 +82,9 @@ namespace Lumos
         bool deviceSuitable(VkPhysicalDevice pdevice);
 
         RendererConfig m_config;
+        bool m_instaninitialized = false;
+        bool m_surfaceinitialized = false;
+        bool deviceinitialized = false;
         VkInstance m_instance = VK_NULL_HANDLE;
         VkSurfaceKHR m_surface = VK_NULL_HANDLE;
         VkDevice m_device = VK_NULL_HANDLE;

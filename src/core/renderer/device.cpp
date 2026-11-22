@@ -1,6 +1,5 @@
 #include "device.h"
 #include "../windowing/window.h"
-#include "commandpool.h"
 #include "swapchain.h"
 #include "buffer.h"
 #include "errorcheck.h"
@@ -8,6 +7,7 @@
 
 #include <stdexcept>
 #include <cstring>
+#include <format>
 #include <set>
 
 namespace Lumos
@@ -44,7 +44,8 @@ namespace Lumos
             default:
                 level = LogLevel::Info;
         }
-        LS_LOG(logger, level, pCallbackData->pMessage);
+        std::string message = std::format("{}, {}, {}", pCallbackData->messageIdNumber, pCallbackData->pMessageIdName, pCallbackData->pMessage);
+        LS_LOG(logger, level, message);
 
         return VK_FALSE;
     }
@@ -141,6 +142,11 @@ namespace Lumos
         return m_presentqueue;
     }
 
+    bool Device::initialized() const
+    {
+        return m_instaninitialized * m_surfaceinitialized;
+    }
+
     QueueFamilyIndices Device::findQueueFamilies(VkPhysicalDevice pdevice)
     {
         QueueFamilyIndices indices;
@@ -221,6 +227,205 @@ namespace Lumos
         throw std::runtime_error("could not find memory type\n");
         return 0;
     }
+
+    /****** PRIVATE ******/
+
+    bool Device::createInstance()
+    {
+        if (m_config.validationlayers && !checkValidationSupport()) {
+            throw std::runtime_error("No validation layers are active");
+        }
+
+        VkApplicationInfo appinfo {
+            .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
+            .pApplicationName = m_config.name.c_str(),
+            .applicationVersion = VK_MAKE_VERSION(1, 0, 0),
+            .pEngineName = "Lumos",
+            .engineVersion = VK_MAKE_VERSION(1, 0, 0),
+            .apiVersion = VK_API_VERSION_1_4
+        };
+
+        VkInstanceCreateInfo instanceinfo {
+            .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+            .pApplicationInfo = &appinfo
+        };
+        std::vector<const char*> instanceextensions = m_window.instanceExtensions();
+
+        if (m_config.validationlayers) {
+            instanceextensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+        }
+        instanceinfo.enabledExtensionCount = static_cast<uint32_t>(instanceextensions.size());
+        instanceinfo.ppEnabledExtensionNames = instanceextensions.data();
+        VkDebugUtilsMessengerCreateInfoEXT debuginfo{};
+        if (m_config.validationlayers) {
+            instanceinfo.enabledLayerCount = static_cast<uint32_t>(validationlayers.size());
+            instanceinfo.ppEnabledLayerNames = validationlayers.data();
+            populateDebugMessengerCreateInfo(debuginfo);
+            instanceinfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debuginfo;
+        }
+        else
+        {
+            instanceinfo.enabledLayerCount = 0;
+            instanceinfo.pNext = nullptr;
+        }
+
+        if(!VK_CHECK(vkCreateInstance(&instanceinfo, nullptr, &m_instance))) {
+            m_instaninitialized = false;
+        }
+        m_instaninitialized = true;
+        return m_instaninitialized;
+    }
+
+    bool Device::createSurface()
+    {
+        if(!VK_CHECK(glfwCreateWindowSurface(m_instance, m_window.handle(), nullptr, &m_surface))) {
+            m_surfaceinitialized = false;
+        }
+        m_surfaceinitialized = true;
+        return m_surfaceinitialized;
+    }
+
+    void Device::pickPhysicalDevice()
+    {
+        uint32_t count = 0;
+        VK_CHECK(vkEnumeratePhysicalDevices(m_instance, &count, nullptr));
+        if (count == 0) {
+            throw std::runtime_error("Failed to find physical device with vulkan support");
+        }
+        std::vector<VkPhysicalDevice> pdevices(count);
+        VK_CHECK(vkEnumeratePhysicalDevices(m_instance, &count, pdevices.data()));
+        for (const auto& device : pdevices) {
+            if (deviceSuitable(device)) {
+                m_physicaldevice = device;
+                break;
+            }
+        }
+        if (m_physicaldevice == VK_NULL_HANDLE) {
+            throw std::runtime_error("failed to find suitable graphics device");
+        }
+    }
+
+    void Device::createLogicalDevice()
+    {
+        QueueFamilyIndices indices = findQueueFamilies(m_physicaldevice);
+        std::vector<VkDeviceQueueCreateInfo> queinfo{};
+        std::set<uint32_t> uniquefamilies = { indices.graphicsFamily.value(), indices.presentFamily.value() };
+        for (uint32_t family : uniquefamilies) {
+            float quepriority = 1.0f;
+            VkDeviceQueueCreateInfo deviceinfo {
+                .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+                .queueFamilyIndex = family,
+                .queueCount = 1,
+                .pQueuePriorities = &quepriority
+            };
+            queinfo.push_back(deviceinfo);
+        }
+        VkPhysicalDeviceFeatures devicefeatures {
+            .samplerAnisotropy = VK_TRUE
+        };
+        VkPhysicalDeviceVulkan11Features features11 {
+            .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES,
+            .shaderDrawParameters = VK_TRUE,
+        };
+        VkPhysicalDeviceSynchronization2Features sync2features {
+            .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES,
+            .pNext = &features11,
+            .synchronization2 = VK_TRUE
+        };
+        VkPhysicalDeviceDynamicRenderingFeaturesKHR dynamicrenderfeature {
+            .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR,
+            .pNext = &sync2features,
+            .dynamicRendering = VK_TRUE
+        };
+
+        VkDeviceCreateInfo deviceinfo {
+            .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+            .pNext = &dynamicrenderfeature,
+            .queueCreateInfoCount = static_cast<uint32_t>(uniquefamilies.size()),
+            .pQueueCreateInfos =queinfo.data(),
+            .enabledLayerCount = 0,
+            .enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size()),
+            .ppEnabledExtensionNames = deviceExtensions.data(),
+            .pEnabledFeatures = &devicefeatures
+        };
+        if (m_config.validationlayers) {
+            deviceinfo.enabledLayerCount = static_cast<uint32_t>(validationlayers.size());
+            deviceinfo.ppEnabledLayerNames = validationlayers.data();
+        }
+        VK_CHECK(vkCreateDevice(m_physicaldevice, &deviceinfo, nullptr, &m_device));
+        vkGetDeviceQueue(m_device, indices.graphicsFamily.value(), 0, &m_graphicsqueue);
+        vkGetDeviceQueue(m_device, indices.presentFamily.value(), 0, &m_presentqueue);
+
+    }
+
+    bool Device::deviceSuitable(VkPhysicalDevice pdevice)
+    {
+        VkPhysicalDeviceProperties deviceProperties;
+        vkGetPhysicalDeviceProperties(pdevice, &deviceProperties);
+
+        QueueFamilyIndices indices = findQueueFamilies(pdevice);
+
+        bool extensionsSupported = checkDeviceExtensionSupport(pdevice);
+
+        bool swapChainAdequate = false;
+        if (extensionsSupported)
+        {
+            SwapChainSupportDetails swapChainSupport = querySwapChainSupport(pdevice);
+            swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
+        }
+
+        VkPhysicalDeviceFeatures supportedFeatures;
+        vkGetPhysicalDeviceFeatures(pdevice, &supportedFeatures);
+
+        return indices.isComplete() && extensionsSupported && swapChainAdequate && supportedFeatures.samplerAnisotropy;
+    }
+
+    bool Device::checkDeviceExtensionSupport(VkPhysicalDevice pdevice)
+    {
+        uint32_t deviceExtensionCount;
+        vkEnumerateDeviceExtensionProperties(pdevice, nullptr, &deviceExtensionCount, nullptr);
+
+        std::vector<VkExtensionProperties> availableExtensions(deviceExtensionCount);
+        vkEnumerateDeviceExtensionProperties(pdevice, nullptr, &deviceExtensionCount, availableExtensions.data());
+
+        std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
+        for (const auto& extension : availableExtensions)
+        {
+            requiredExtensions.erase(extension.extensionName);
+        }
+        return requiredExtensions.empty();
+    }
+
+    bool Device::checkValidationSupport() const
+    {
+        uint32_t count;
+        VK_CHECK(vkEnumerateInstanceLayerProperties(&count, nullptr));
+        std::vector<VkLayerProperties> layers(count);
+        VK_CHECK(vkEnumerateInstanceLayerProperties(&count, layers.data()));
+        for (const char* vallayer : validationlayers) {
+            bool found = false;
+            for (const auto& layer : layers) {
+                std::println("layer name: {}", layer.layerName);
+                if (strcmp(vallayer, layer.layerName) == 0) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                return false;
+            }
+        }
+        return true;
+
+    }
+
+    void Device::createDebugMessenger()
+    {
+        VkDebugUtilsMessengerCreateInfoEXT debuginfo{};
+        populateDebugMessengerCreateInfo(debuginfo);
+        VK_CHECK(debugUtilsMessenger(m_instance, &debuginfo, nullptr, &m_debugmessenger));
+    }
+
     //
     // VkFormat Device::findSupportedFormat(const std::vector<VkFormat>& formats,
     //                                      VkImageTiling tiling,
@@ -385,195 +590,4 @@ namespace Lumos
     //
     //
     //
-    /****** PRIVATE ******/
-
-    bool Device::createInstance()
-    {
-         if (m_config.validationlayers && !checkValidationSupport()) {
-             throw std::runtime_error("No validation layers are active");
-         }
-
-         VkApplicationInfo appinfo {
-             .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
-             .pApplicationName = m_config.name.c_str(),
-             .applicationVersion = VK_MAKE_VERSION(1, 0, 0),
-             .pEngineName = "Lumos",
-             .engineVersion = VK_MAKE_VERSION(1, 0, 0),
-             .apiVersion = VK_API_VERSION_1_4
-         };
-
-         VkInstanceCreateInfo instanceinfo {
-             .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
-             .pApplicationInfo = &appinfo
-         };
-         std::vector<const char*> instanceextensions = m_window.instanceExtensions();
-
-         if (m_config.validationlayers) {
-             instanceextensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-         }
-         instanceinfo.enabledExtensionCount = static_cast<uint32_t>(instanceextensions.size());
-         instanceinfo.ppEnabledExtensionNames = instanceextensions.data();
-         VkDebugUtilsMessengerCreateInfoEXT debuginfo{};
-         if (m_config.validationlayers) {
-             instanceinfo.enabledLayerCount = static_cast<uint32_t>(validationlayers.size());
-             instanceinfo.ppEnabledLayerNames = validationlayers.data();
-             populateDebugMessengerCreateInfo(debuginfo);
-             instanceinfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debuginfo;
-         }
-         else
-         {
-             instanceinfo.enabledLayerCount = 0;
-             instanceinfo.pNext = nullptr;
-         }
-
-         VK_CHECK(vkCreateInstance(&instanceinfo, nullptr, &m_instance));
-         return true;
-    }
-
-    bool Device::createSurface()
-    {
-        VK_CHECK(glfwCreateWindowSurface(m_instance, m_window.handle(), nullptr, &m_surface));
-        return true;
-    }
-
-    void Device::pickPhysicalDevice()
-    {
-        uint32_t count = 0;
-        VK_CHECK(vkEnumeratePhysicalDevices(m_instance, &count, nullptr));
-        if (count == 0) {
-            throw std::runtime_error("Failed to find physical device with vulkan support");
-        }
-        std::vector<VkPhysicalDevice> pdevices(count);
-        VK_CHECK(vkEnumeratePhysicalDevices(m_instance, &count, pdevices.data()));
-        for (const auto& device : pdevices) {
-            if (deviceSuitable(device)) {
-                m_physicaldevice = device;
-                break;
-            }
-        }
-        if (m_physicaldevice == VK_NULL_HANDLE) {
-            throw std::runtime_error("failed to find suitable graphics device");
-        }
-    }
-
-    void Device::createLogicalDevice()
-    {
-        QueueFamilyIndices indices = findQueueFamilies(m_physicaldevice);
-        std::vector<VkDeviceQueueCreateInfo> queinfo{};
-        std::set<uint32_t> uniquefamilies = { indices.graphicsFamily.value(), indices.presentFamily.value() };
-        for (uint32_t family : uniquefamilies) {
-            float quepriority = 1.0f;
-            VkDeviceQueueCreateInfo deviceinfo {
-                .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-                .queueFamilyIndex = family,
-                .queueCount = 1,
-                .pQueuePriorities = &quepriority
-            };
-            queinfo.push_back(deviceinfo);
-        }
-        VkPhysicalDeviceFeatures devicefeatures {
-            .samplerAnisotropy = VK_TRUE
-        };
-        VkPhysicalDeviceVulkan11Features features11 {
-            .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES,
-            .shaderDrawParameters = VK_TRUE,
-        };
-        VkPhysicalDeviceSynchronization2Features sync2features {
-            .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES,
-            .pNext = &features11,
-            .synchronization2 = VK_TRUE
-        };
-        VkPhysicalDeviceDynamicRenderingFeaturesKHR dynamicrenderfeature {
-            .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR,
-            .pNext = &sync2features,
-            .dynamicRendering = VK_TRUE
-        };
-
-        VkDeviceCreateInfo deviceinfo {
-            .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-            .pNext = &dynamicrenderfeature,
-            .queueCreateInfoCount = static_cast<uint32_t>(uniquefamilies.size()),
-            .pQueueCreateInfos =queinfo.data(),
-            .enabledLayerCount = 0,
-            .enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size()),
-            .ppEnabledExtensionNames = deviceExtensions.data(),
-            .pEnabledFeatures = &devicefeatures
-        };
-        if (m_config.validationlayers) {
-            deviceinfo.enabledLayerCount = static_cast<uint32_t>(validationlayers.size());
-            deviceinfo.ppEnabledLayerNames = validationlayers.data();
-        }
-        VK_CHECK(vkCreateDevice(m_physicaldevice, &deviceinfo, nullptr, &m_device));
-        vkGetDeviceQueue(m_device, indices.graphicsFamily.value(), 0, &m_graphicsqueue);
-        vkGetDeviceQueue(m_device, indices.presentFamily.value(), 0, &m_presentqueue);
-
-    }
-
-    bool Device::deviceSuitable(VkPhysicalDevice pdevice)
-    {
-        VkPhysicalDeviceProperties deviceProperties;
-        vkGetPhysicalDeviceProperties(pdevice, &deviceProperties);
-
-        QueueFamilyIndices indices = findQueueFamilies(pdevice);
-
-        bool extensionsSupported = checkDeviceExtensionSupport(pdevice);
-
-        bool swapChainAdequate = false;
-        if (extensionsSupported)
-        {
-            SwapChainSupportDetails swapChainSupport = querySwapChainSupport(pdevice);
-            swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
-        }
-
-        VkPhysicalDeviceFeatures supportedFeatures;
-        vkGetPhysicalDeviceFeatures(pdevice, &supportedFeatures);
-
-        return indices.isComplete() && extensionsSupported && swapChainAdequate && supportedFeatures.samplerAnisotropy;
-    }
-
-    bool Device::checkDeviceExtensionSupport(VkPhysicalDevice pdevice)
-    {
-        uint32_t deviceExtensionCount;
-        vkEnumerateDeviceExtensionProperties(pdevice, nullptr, &deviceExtensionCount, nullptr);
-
-        std::vector<VkExtensionProperties> availableExtensions(deviceExtensionCount);
-        vkEnumerateDeviceExtensionProperties(pdevice, nullptr, &deviceExtensionCount, availableExtensions.data());
-
-        std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
-        for (const auto& extension : availableExtensions)
-        {
-            requiredExtensions.erase(extension.extensionName);
-        }
-        return requiredExtensions.empty();
-    }
-
-    bool Device::checkValidationSupport() const
-    {
-        uint32_t count;
-        VK_CHECK(vkEnumerateInstanceLayerProperties(&count, nullptr));
-        std::vector<VkLayerProperties> layers(count);
-        VK_CHECK(vkEnumerateInstanceLayerProperties(&count, layers.data()));
-        for (const char* vallayer : validationlayers) {
-            bool found = false;
-            for (const auto& layer : layers) {
-                std::println("layer name: {}", layer.layerName);
-                if (strcmp(vallayer, layer.layerName) == 0) {
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                return false;
-            }
-        }
-        return true;
-
-    }
-
-    void Device::createDebugMessenger()
-    {
-        VkDebugUtilsMessengerCreateInfoEXT debuginfo{};
-        populateDebugMessengerCreateInfo(debuginfo);
-        VK_CHECK(debugUtilsMessenger(m_instance, &debuginfo, nullptr, &m_debugmessenger));
-    }
 } //namespace Lumos

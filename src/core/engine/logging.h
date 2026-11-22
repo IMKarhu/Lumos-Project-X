@@ -1,5 +1,7 @@
 #pragma once
 #include <string>
+#include <format>
+#include "vulkan/vk_enum_string_helper.h"
 
 namespace Lumos
 {
@@ -9,6 +11,11 @@ namespace Lumos
 #define LS_LOG_DEBUG(logger, message) LS_LOG(logger, LogLevel::Debug, message)
 #define LS_LOG_ERROR(logger, message) LS_LOG(logger, LogLevel::Error, message)
 #define LS_LOG_FATAL(logger, message) LS_LOG(logger, LogLevel::Fatal, message)
+#define LS_LOG_VK_ERROR(logger, VkResult)                                                 \
+    do {                                                                                  \
+        std::string message = std::format("vulkan error: {}", string_VkResult(VkResult)); \
+        LS_LOG(logger, LogLevel::Error, message);                                         \
+    } while(0)
 
     enum class LogLevel
     {

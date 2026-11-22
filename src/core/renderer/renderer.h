@@ -35,6 +35,7 @@ namespace Lumos
         void render(const RenderData& renderdata);
         void waitIdle();
         void windowResized(bool resized);
+        bool initialized() const;
         void cleanup();
         void setTexture(const Image& image, const Sampler& sampler);
 

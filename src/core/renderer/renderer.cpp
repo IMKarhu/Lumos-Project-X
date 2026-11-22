@@ -13,6 +13,7 @@
 #include "pipeline.h"
 #include "errorcheck.h"
 #include "math/projection.h"
+#include "pipelinebuilder.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace Lumos
@@ -22,6 +23,9 @@ namespace Lumos
         , m_config(config)
     {
         m_device = std::make_unique<Device>(window, config);
+        if (!m_device->initialized()) {
+            m_initialized = false;
+        }
         m_swapchain = std::make_unique<SwapChain>(*m_device, window, config);
         createCommandPools();
         createCommandBuffers();
@@ -36,13 +40,27 @@ namespace Lumos
             m_entitysetlayout,
             m_texturelayout
         };
-        PipelineConfig pipelineconfig {
-            .shaderfile = "shaders/sprite.spv",
-            .layouts = descriptorlayouts,
-            .colorformat = m_swapchain->imageformat(),
-            .topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST
-        };
-        m_defaultpipeline = std::make_unique<GraphicsPipeline>(*m_device, pipelineconfig);
+        auto buffer = readShaderFile("shaders/sprite.spv");
+        if (!buffer) {
+            LS_LOG_ERROR(m_consolelogger, "shaders/sprite.spv: buffer is null ");
+        }
+        auto defaultp = PipelineBuilder{}
+        .shader(*buffer)
+        .topology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
+        .descriptorSetLayouts(descriptorlayouts)
+        .deptBias(false)
+        .alphablend()
+        .depth(false, false)
+        .cullMode(VK_CULL_MODE_NONE)
+        .colorFormats({VK_FORMAT_B8G8R8A8_SRGB})
+        .build(*m_device);
+        if (!defaultp) {
+            ConsoleLogger logger;
+            LS_LOG_VK_ERROR(logger, defaultp.error());
+        } else {
+            m_defaultpipeline = std::move(defaultp.value());
+        }
+        m_initialized = true;
     }
 
     Renderer::~Renderer()
@@ -198,6 +216,12 @@ namespace Lumos
     {
         m_framebufferresized = resized;
     }
+
+    bool Renderer::initialized() const
+    {
+        return m_initialized;
+    }
+
 
     // bool Renderer::stenchilComponent(VkFormat format)
     // {

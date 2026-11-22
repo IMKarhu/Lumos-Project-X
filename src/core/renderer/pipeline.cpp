@@ -1,23 +1,19 @@
 #include "pipeline.h"
-#include "errorcheck.h"
-#include "device.h"
-#include "renderdata.h"
 #include <fstream>
 
 namespace Lumos
 {
-    GraphicsPipeline::GraphicsPipeline(Device& device, const PipelineConfig& config)
+    GraphicsPipeline::GraphicsPipeline(VkDevice device, VkPipeline pipeline, VkPipelineLayout layout)
         : m_device(device)
-        , m_config(config)
+        , m_pipeline(pipeline)
+        , m_layout(layout)
     {
-        createPipelineLayout();
-        createPipeline(m_config.shaderfile);
     }
 
     GraphicsPipeline::~GraphicsPipeline()
     {
-        vkDestroyPipeline(m_device.device(), m_pipeline, nullptr);
-        vkDestroyPipelineLayout(m_device.device(), m_layout, nullptr);
+        vkDestroyPipeline(m_device, m_pipeline, nullptr);
+        vkDestroyPipelineLayout(m_device, m_layout, nullptr);
     }
 
     VkPipelineLayout GraphicsPipeline::layout() const noexcept
@@ -25,172 +21,9 @@ namespace Lumos
         return m_layout;
     }
 
-    void GraphicsPipeline::createPipeline(const std::string& shaderpath)
-    {
-        auto code = readFile(shaderpath);
-        VkShaderModule shadermodule = shaderModule(code, m_device.device());
-
-        VkPipelineShaderStageCreateInfo vertexShaderStageCI {
-            .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-            .stage = VK_SHADER_STAGE_VERTEX_BIT,
-            .module = shadermodule,
-            .pName = "vertMain",
-        };
-
-        VkPipelineShaderStageCreateInfo fragmentShaderStageCI {
-            .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-            .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
-            .module = shadermodule,
-            .pName = "fragMain"
-        };
-        VkPipelineShaderStageCreateInfo stages[] = {
-            vertexShaderStageCI,
-            fragmentShaderStageCI
-        };
-
-        VkPipelineVertexInputStateCreateInfo vertexinputinfo {
-            .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
-            .vertexBindingDescriptionCount = 0,
-            .pVertexBindingDescriptions = nullptr,
-            .vertexAttributeDescriptionCount = 0,
-            .pVertexAttributeDescriptions = nullptr
-        };
-
-        VkPipelineInputAssemblyStateCreateInfo inputassembly {
-            .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
-            .topology = m_config.topology,
-            .primitiveRestartEnable = VK_FALSE
-        };
-
-        std::vector<VkDynamicState> dynamicstates;
-        dynamicstates.push_back(VK_DYNAMIC_STATE_VIEWPORT);
-        dynamicstates.push_back(VK_DYNAMIC_STATE_SCISSOR);
-        VkPipelineDynamicStateCreateInfo dynamiccreateinfo {
-            .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
-            .dynamicStateCount = static_cast<uint32_t>(dynamicstates.size()),
-            .pDynamicStates = dynamicstates.data()
-        };
-
-        VkPipelineViewportStateCreateInfo viewportstate {
-            .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
-            .viewportCount = 1,
-            .scissorCount = 1
-        };
-
-        VkPipelineRasterizationStateCreateInfo rasterizer {
-            .sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
-            .depthClampEnable = VK_FALSE,
-            .rasterizerDiscardEnable = VK_FALSE,
-            .polygonMode = VK_POLYGON_MODE_FILL,
-            .cullMode = VK_CULL_MODE_NONE,
-            .frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
-            .depthBiasEnable = VK_FALSE,
-            .depthBiasConstantFactor = 0.0f, // Optional
-            .depthBiasClamp = 0.0f, // Optional
-            .depthBiasSlopeFactor = 0.0f, // Optional
-            .lineWidth = 1.0f
-        };
-
-        VkPipelineMultisampleStateCreateInfo multisampling {
-            .sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
-            .rasterizationSamples = VK_SAMPLE_COUNT_1_BIT,
-            .sampleShadingEnable = VK_FALSE,
-            .minSampleShading = 1.0f, // Optional
-            .pSampleMask = nullptr, // Optional
-            .alphaToCoverageEnable = VK_FALSE, // Optional
-            .alphaToOneEnable = VK_FALSE // Optional
-        };
-
-        VkPipelineColorBlendAttachmentState colorblendattachment {
-            .blendEnable = VK_TRUE,
-            .srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA,
-            .dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
-            .colorBlendOp = VK_BLEND_OP_ADD,
-            .srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE,
-            .dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
-            .alphaBlendOp = VK_BLEND_OP_ADD,
-            .colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT
-        };
-
-        VkPipelineColorBlendStateCreateInfo colorblending {
-            .sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
-            .logicOpEnable = VK_FALSE,
-            .logicOp = VK_LOGIC_OP_COPY, // Optional
-            .attachmentCount = 1,
-            .pAttachments = &colorblendattachment,
-            .blendConstants = { // optional
-                0.0f,
-                0.0f,
-                0.0f,
-                0.0f
-            }
-        };
-
-        VkPipelineRenderingCreateInfo renderinginfo {
-            .sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
-            .colorAttachmentCount = 1,
-            .pColorAttachmentFormats = &m_config.colorformat,
-        };
-
-        VkGraphicsPipelineCreateInfo pipelineinfo {
-            .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
-            .pNext = &renderinginfo,
-            .stageCount = 2,
-            .pStages = stages,
-            .pVertexInputState = &vertexinputinfo,
-            .pInputAssemblyState = &inputassembly,
-            .pViewportState = &viewportstate,
-            .pRasterizationState = &rasterizer,
-            .pMultisampleState = &multisampling,
-            .pColorBlendState = &colorblending,
-            .pDynamicState = &dynamiccreateinfo,
-            .layout = m_layout,
-            .renderPass = nullptr,
-            .subpass = 0,
-            .basePipelineHandle = VK_NULL_HANDLE, // Optional
-            .basePipelineIndex = -1 // Optional
-        };
-
-        VK_CHECK(vkCreateGraphicsPipelines(m_device.device(), VK_NULL_HANDLE, 1, &pipelineinfo, nullptr, &m_pipeline));
-
-
-        vkDestroyShaderModule(m_device.device(), shadermodule, nullptr);
-    }
-
     void GraphicsPipeline::bind(VkCommandBuffer cmdbuf)
     {
         vkCmdBindPipeline(cmdbuf, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
-    }
-
-    void GraphicsPipeline::createPipelineLayout()
-    {
-        //TODO: pushconstants should probably be defined in config
-        // VkPushConstantRange pushconstantrange{
-        //     .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
-        //     .offset = 0,
-        //     .size = sizeof(ObjectPushConstant)
-        // };
-
-        VkPipelineLayoutCreateInfo info{
-            .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-            .setLayoutCount = static_cast<uint32_t>(m_config.layouts.size()),
-            .pSetLayouts = m_config.layouts.data()
-            // .pushConstantRangeCount = 1,
-            // .pPushConstantRanges = &pushconstantrange
-        };
-        VK_CHECK(vkCreatePipelineLayout(m_device.device(), &info, nullptr, &m_layout));
-    }
-
-
-    VkShaderModule GraphicsPipeline::shaderModule(const std::vector<char>& buffer, VkDevice device)
-    {
-        VkShaderModuleCreateInfo moduleinfo{};
-        moduleinfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-        moduleinfo.codeSize = buffer.size();
-        moduleinfo.pCode = reinterpret_cast<const uint32_t*>(buffer.data());
-        VkShaderModule shadermodule;
-        VK_CHECK(vkCreateShaderModule(device, &moduleinfo, nullptr, &shadermodule));
-        return shadermodule;
     }
 
     std::vector<char> readFile(const std::string& filename)
@@ -204,6 +37,27 @@ namespace Lumos
         file.seekg(0);
         file.read(buffer.data(), filesize);
         file.close();
+        return buffer;
+    }
+    std::expected<std::vector<uint32_t>, std::string>
+    readShaderFile(const std::filesystem::path& filepath)
+    {
+        std::ifstream file(filepath, std::ios::ate | std::ios::binary);
+        if (!file.is_open()) {
+            return std::unexpected("failed to open: "+ filepath.string());
+        }
+        
+        const auto size = static_cast<size_t>(file.tellg());
+        if (size == 0 || size % sizeof(uint32_t) != 0) {
+            return std::unexpected(filepath.string() + ": size is not multiple of 4");
+        }
+        std::vector<uint32_t> buffer(size / sizeof(uint32_t));
+        file.seekg(0);
+        file.read(reinterpret_cast<char*>(buffer.data()), static_cast<std::streamsize>(size));
+        constexpr uint32_t kSpirvMagic = 0x07230203; //some random magic number that AI gave me when I was debugging a bug
+        if (buffer[0] != kSpirvMagic) {
+            return std::unexpected(filepath.string() + ": not a SPIR-V file");
+        }
         return buffer;
     }
 } //namespace Lumos

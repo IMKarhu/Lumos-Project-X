@@ -2,45 +2,31 @@
 #include <vulkan/vulkan.h>
 #include <string>
 #include <vector>
-#include <span>
+#include <expected>
+#include <filesystem>
 
 #include <glm/glm.hpp>
 namespace Lumos
 {
-
-    /*
-     * Forward Declarations
-     */
-    class Device;
-
-    struct PipelineConfig
-    {
-        std::string shaderfile;
-        std::span<const VkDescriptorSetLayout> layouts;
-        VkFormat colorformat;
-        VkPrimitiveTopology topology;
-    };
-
     class GraphicsPipeline
     {
     public:
-        explicit GraphicsPipeline(Device& device, const PipelineConfig& config);
+        GraphicsPipeline() = default;
+        GraphicsPipeline(VkDevice device, VkPipeline pipeline, VkPipelineLayout layout);
         ~GraphicsPipeline();
 
         GraphicsPipeline(const GraphicsPipeline&) = delete;
         GraphicsPipeline operator=(const GraphicsPipeline&) = delete;
 
-        [[nodiscard]] VkPipeline pipeline() const noexcept;
+        VkPipeline pipeline() const noexcept;
         VkPipelineLayout layout() const noexcept;
-        void createPipeline(const std::string& shaderpath);
         void bind(VkCommandBuffer cmdbuf);
     private:
-        void createPipelineLayout();
-        VkShaderModule shaderModule(const std::vector<char>& buffer, VkDevice device);
-        Device& m_device;
-        PipelineConfig m_config;
+        VkDevice m_device = VK_NULL_HANDLE;
         VkPipeline m_pipeline = VK_NULL_HANDLE;
         VkPipelineLayout m_layout = VK_NULL_HANDLE;
     };
     std::vector<char> readFile(const std::string& filename);
+    std::expected<std::vector<uint32_t>, std::string>
+    readShaderFile(const std::filesystem::path& filepath);
 } //namespace Lumos
