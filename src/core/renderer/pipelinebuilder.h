@@ -81,7 +81,7 @@ namespace Lumos
 
         auto& pushConstantRange(VkShaderStageFlags stages, uint32_t size, uint32_t offset)
         {
-            m_pushranges.push_back({stages, size, offset});
+            m_pushranges.push_back({stages, offset, size});
             return *this;
         }
 

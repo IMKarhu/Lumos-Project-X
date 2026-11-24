@@ -63,5 +63,7 @@ add_slang_shader_target(compile_shaders
     ${CMAKE_CURRENT_SOURCE_DIR}/shaders/presentation.slang
     ${CMAKE_CURRENT_SOURCE_DIR}/shaders/cube.slang
     ${CMAKE_CURRENT_SOURCE_DIR}/shaders/debug.slang
+    ${CMAKE_CURRENT_SOURCE_DIR}/shaders/grid2d.slang
+
 )
 add_dependencies(lumos_core compile_shaders)

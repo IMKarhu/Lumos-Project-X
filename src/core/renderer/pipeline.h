@@ -21,6 +21,11 @@ namespace Lumos
         VkPipeline pipeline() const noexcept;
         VkPipelineLayout layout() const noexcept;
         void bind(VkCommandBuffer cmdbuf);
+
+        template<typename T>
+        void pushconstants(VkCommandBuffer cmdbuf, VkShaderStageFlags stages, const T& value) {
+            vkCmdPushConstants(cmdbuf, m_layout, stages, 0, sizeof(T), &value);
+        }
     private:
         VkDevice m_device = VK_NULL_HANDLE;
         VkPipeline m_pipeline = VK_NULL_HANDLE;

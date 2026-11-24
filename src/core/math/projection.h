@@ -32,5 +32,11 @@ namespace Lumos
             return orthoProjection(camera.position, camera.size, camera.zoom) * view(camera.rotation, camera.position);
         }
 
+        inline glm::mat4 inverseViewProj()
+        {
+            return glm::mat4(1.0f);
+            // return glm::inverse()
+        }
+
     } //namespace Math
 } //namespace Lumos

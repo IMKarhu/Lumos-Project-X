@@ -114,7 +114,11 @@ namespace Lumos
 
         struct CameraUBO
         {
+            glm::mat4 view = glm::mat4(1.0f);
+            glm::mat4 proj = glm::mat4(1.0f);
             glm::mat4 viewproj = glm::mat4(1.0f);
+            glm::mat4 invviewproj = glm::mat4(1.0f);
+            glm::vec4 position;
         };
         VkDescriptorSetLayout m_camerasetlayout = VK_NULL_HANDLE;
         VkDescriptorPool m_descriptorpool = VK_NULL_HANDLE;
@@ -127,7 +131,8 @@ namespace Lumos
         VkDescriptorSetLayout m_texturelayout = VK_NULL_HANDLE;
         VkDescriptorSet m_textureset;
 
-        std::unique_ptr<GraphicsPipeline> m_debuggridpipeline;
+        std::unique_ptr<GraphicsPipeline> m_grid2dpipeline;
+        GridPushConstant m_gridpush;
 
     };
 } //namespace Lumos

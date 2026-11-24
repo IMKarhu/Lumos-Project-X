@@ -60,6 +60,31 @@ namespace Lumos
         } else {
             m_defaultpipeline = std::move(defaultp.value());
         }
+
+        //grid
+        const std::array gridlayouts {
+            m_camerasetlayout,
+        };
+        auto gridbuffer = readShaderFile("shaders/grid2d.spv");
+        if (!gridbuffer) {
+            LS_LOG_ERROR(m_consolelogger, "shaders/grid2d.spv: buffer is null");
+        }
+        auto gridbuilder = PipelineBuilder{}
+        .shader(*gridbuffer)
+        .cullMode(VK_CULL_MODE_NONE)
+        .depth(false, false)
+        .alphablend()
+        .colorFormats({VK_FORMAT_B8G8R8A8_SRGB})
+        .descriptorSetLayouts(gridlayouts)
+        .pushConstantRange(VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(GridPushConstant), 0)
+        .build(*m_device);
+        if (!gridbuilder) {
+            LS_LOG_VK_ERROR(m_consolelogger, gridbuilder.error());
+            m_initialized = false;
+        } else {
+            m_grid2dpipeline = std::move(gridbuilder.value());
+            m_initialized = true;
+        }
         m_initialized = true;
     }
 
@@ -397,6 +422,16 @@ namespace Lumos
     {
         transitioSwapchainImage(cmdbuf, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
         beginSwapchainRendering(cmdbuf);
+        // m_grid2dpipeline->bind(cmdbuf);
+        // vkCmdBindDescriptorSets(cmdbuf,
+        //         VK_PIPELINE_BIND_POINT_GRAPHICS,
+        //         m_grid2dpipeline->layout(),
+        //         0, 1,
+        //         &m_camerasets[m_frameindex],
+        //         0,
+        //         nullptr);
+        // m_grid2dpipeline->pushconstants(cmdbuf, VK_SHADER_STAGE_FRAGMENT_BIT, m_gridpush);
+        // vkCmdDraw(cmdbuf, 3, 1, 0, 0);
         m_defaultpipeline->bind(cmdbuf);
         vkCmdBindDescriptorSets(cmdbuf,
                 VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -458,6 +493,9 @@ namespace Lumos
         }
 
         CameraUBO ubo{};
+        ubo.view = Math::view(renderdata.cameradata.rotation, renderdata.cameradata.position);
+        ubo.proj = Math::orthoProjection(renderdata.cameradata.position,
+                renderdata.cameradata.size, renderdata.cameradata.zoom);
         ubo.viewproj = Math::orthoViewProj(renderdata.cameradata);
         auto& buffer = *m_framedata[m_imageindex].camerabuffer;
         std::memcpy(buffer.map(), &ubo, sizeof(CameraUBO));

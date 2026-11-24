@@ -48,5 +48,10 @@ namespace Lumos
         float rotation = 0.0f;
     };
 
-
+    struct GridPushConstant
+    {
+        glm::vec4 majorcolor = {0.50f, 0.50f, 0.50f, 0.30f};
+        glm::vec4 minorcolor = {0.60f, 0.60f, 0.60f, 0.60f};
+        glm::vec4 cell = {1.0f, 10.0f, 8.0f, 0.0f}; //x = size, y = major every, z = fade start, w = fade end
+    };
 } //namespace Lumos
