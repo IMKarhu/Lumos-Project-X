@@ -223,10 +223,9 @@ namespace Lumos
 
     void Renderer::render(const RenderData& renderdata)
     {
-        beginFrame();
-        // if (!beginFrame()) {
-        //     return;
-        // }
+        if (!beginFrame()) {
+            return;
+        }
         prepareFrame(currentCommandBuffer(), renderdata);
         recordCommands(currentCommandBuffer(), renderdata);
         endFrame();
@@ -277,8 +276,7 @@ namespace Lumos
         if (result == VK_ERROR_OUT_OF_DATE_KHR || m_framebufferresized)
         {
             LS_LOG_INFO(m_consolelogger, "swapchain out of date");
-            recreateSwapchain();
-            // return false;
+            return false;
         }
         else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
         {
@@ -497,7 +495,7 @@ namespace Lumos
         ubo.proj = Math::orthoProjection(renderdata.cameradata.position,
                 renderdata.cameradata.size, renderdata.cameradata.zoom);
         ubo.viewproj = Math::orthoViewProj(renderdata.cameradata);
-        auto& buffer = *m_framedata[m_imageindex].camerabuffer;
+        auto& buffer = *m_framedata[m_frameindex].camerabuffer;
         std::memcpy(buffer.map(), &ubo, sizeof(CameraUBO));
         buffer.unmap();
     }

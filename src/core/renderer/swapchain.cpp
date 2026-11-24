@@ -63,13 +63,6 @@ namespace Lumos
         VkExtent2D extent = swapExtent(swapchainsupport.capabilities, m_window);
 
         uint32_t imagecount = swapchainsupport.capabilities.minImageCount + 1;
-        std::println("swapchain minImageCount: {}", swapchainsupport.capabilities.minImageCount);
-        std::println("swapchain maximagecount: {}", swapchainsupport.capabilities.maxImageCount);
-        std::println("image count: {}", imagecount);
-        //very much dirty fix to clamp image count to 2
-        if (imagecount > 2) {
-            imagecount = 2;
-        }
         if (swapchainsupport.capabilities.maxImageCount > 0
             && imagecount > swapchainsupport.capabilities.maxImageCount) {
             imagecount = swapchainsupport.capabilities.maxImageCount;
