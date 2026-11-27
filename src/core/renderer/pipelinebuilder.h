@@ -103,7 +103,7 @@ namespace Lumos
         VkCompareOp m_depthop = VK_COMPARE_OP_LESS;
 
         std::vector<VkFormat> m_colorformats;
-        VkFormat m_depthformat;
+        VkFormat m_depthformat = VK_FORMAT_UNDEFINED;
         std::vector<VkDescriptorSetLayout> m_setlayouts;
         std::vector<VkPushConstantRange> m_pushranges;
     };
