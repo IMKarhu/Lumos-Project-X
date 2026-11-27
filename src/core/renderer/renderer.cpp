@@ -492,8 +492,7 @@ namespace Lumos
 
         CameraUBO ubo{};
         ubo.view = Math::view(renderdata.cameradata.rotation, renderdata.cameradata.position);
-        ubo.proj = Math::orthoProjection(renderdata.cameradata.position,
-                renderdata.cameradata.size, renderdata.cameradata.zoom);
+        ubo.proj = Math::orthoProjection(renderdata.cameradata.size, renderdata.cameradata.zoom);
         ubo.viewproj = Math::orthoViewProj(renderdata.cameradata);
         auto& buffer = *m_framedata[m_frameindex].camerabuffer;
         std::memcpy(buffer.map(), &ubo, sizeof(CameraUBO));

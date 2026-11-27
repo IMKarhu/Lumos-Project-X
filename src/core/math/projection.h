@@ -15,21 +15,21 @@ namespace Lumos
             return view;
         }
 
-        inline glm::mat4 orthoProjection(glm::vec2 position, glm::vec2 size, float zoom)
+        inline glm::mat4 orthoProjection(glm::vec2 size, float zoom)
         {
             const glm::vec2 halfsize = size / (2.0f * zoom);
             return glm::ortho(
-                    position.x - halfsize.x,
-                    position.x + halfsize.x,
-                    position.y - halfsize.y,
-                    position.y + halfsize.y,
+                    -halfsize.x,
+                    halfsize.x,
+                    -halfsize.y,
+                    halfsize.y,
                     -1.0f,
                      1.0f);
         }
 
         inline glm::mat4 orthoViewProj(const CameraData& camera)
         {
-            return orthoProjection(camera.position, camera.size, camera.zoom) * view(camera.rotation, camera.position);
+            return orthoProjection(camera.size, camera.zoom) * view(camera.rotation, camera.position);
         }
 
         inline glm::mat4 inverseViewProj()
