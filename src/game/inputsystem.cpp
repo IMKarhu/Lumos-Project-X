@@ -1,6 +1,6 @@
 #include "inputsystem.h"
-#include <print>
 #include <algorithm>
+#include <cmath>
 #include "ecs/ecs.h"
 #include "windowing/events.h"
 

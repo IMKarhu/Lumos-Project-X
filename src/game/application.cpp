@@ -52,7 +52,7 @@ void Application::run()
             const uint64_t framessincelastupdate = framecount - lastfpsframe;
             const double fps = framessincelastupdate / timeaccumulator;
             const double avgms = (timeaccumulator / framessincelastupdate) * 1000.0;
-            m_engine.setTitle(std::format("Lumos engine test. Fps: {:.5} | avg Ms: {:.2}", fps, avgms));
+            m_engine.setTitle(std::format("Lumos engine test. Fps: {:.5} | avg Ms: {:.2f}", fps, avgms));
             timeaccumulator = 0.0;
             lastfpsframe = framecount;
         }

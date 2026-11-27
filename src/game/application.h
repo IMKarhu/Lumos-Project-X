@@ -13,5 +13,4 @@ private:
     Lumos::LumosEngine m_engine;
     Ecs m_ecs;
     InputSystem m_inputsystem{m_ecs};
-    uint64_t m_lastframeInMs = 0;
 };
