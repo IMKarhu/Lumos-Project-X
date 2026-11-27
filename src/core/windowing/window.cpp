@@ -88,6 +88,11 @@ namespace Lumos
         glfwSetWindowShouldClose(m_window, close);
     }
 
+    void Window::windowDimensions(int& width, int& height)
+    {
+        glfwGetFramebufferSize(m_window, &width, &height);
+    }
+
     void Window::setResizeCallback(std::function<void(int, int)> callback)
     {
         m_resizecallback = std::move(callback);

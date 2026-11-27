@@ -141,11 +141,6 @@ namespace Lumos
 
     void LumosEngine::resize(int width, int height)
     {
-        if (width <= 0 || height <= 0) {
-            if (!m_window->shouldClose()) {
-                return;
-            }
-            m_window->waitEvents();
-        }
+        m_renderer->windowResized(true);
     }
 } //namespace Lumos

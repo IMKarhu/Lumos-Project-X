@@ -26,6 +26,7 @@ namespace Lumos
             void swapBuffers();
             void setWindowTitle(const std::string& title);
             void setWindowShouldClose(bool close);
+            void windowDimensions(int& width, int& height);
             void setResizeCallback(std::function<void(int, int)> callback);
             void setScrollCallback(std::function<void(double, double)> callback);
         private:

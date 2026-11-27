@@ -273,9 +273,10 @@ namespace Lumos
                                                 frame.imageavailablesemaphore,
                                                 VK_NULL_HANDLE,
                                                 &m_imageindex);
-        if (result == VK_ERROR_OUT_OF_DATE_KHR || m_framebufferresized)
+        if (result == VK_ERROR_OUT_OF_DATE_KHR)
         {
             LS_LOG_INFO(m_consolelogger, "swapchain out of date");
+            recreateSwapchain();
             return false;
         }
         else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
@@ -695,6 +696,17 @@ namespace Lumos
 
     void Renderer::recreateSwapchain()
     {
+        int width;
+        int height;
+        m_window.windowDimensions(width, height);
+        while (width <= 0 || height <= 0) {
+            if (!m_window.shouldClose()) {
+                return;
+            }
+            m_window.windowDimensions(width, height);
+            m_window.waitEvents();
+        }
+
         VK_CHECK(vkDeviceWaitIdle(m_device->device()));
         auto replacement = std::make_unique<SwapChain>(*m_device, m_window, m_config, m_swapchain->swapchain());
         m_swapchain = std::move(replacement);
