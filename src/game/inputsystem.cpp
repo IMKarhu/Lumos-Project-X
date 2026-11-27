@@ -1,5 +1,6 @@
 #include "inputsystem.h"
 #include <print>
+#include <algorithm>
 #include "ecs/ecs.h"
 #include "windowing/events.h"
 
@@ -18,11 +19,14 @@ void InputSystem::setEventSystem(Lumos::EventBus& eventbus)
 
 void InputSystem::updateScrolling(double x, double y)
 {
+    constexpr float step = 1.1f;
+    constexpr float min = 0.1f;
+    constexpr float max = 10.0f;
     for (auto ent : m_ecs.view<Lumos::Camera>()) {
         auto& cam = m_ecs.getComponent<Lumos::Camera>(ent);
-        cam.zoom += y;
+        cam.zoom *= std::pow(step, static_cast<float>(y));
+        cam.zoom = std::clamp(cam.zoom, min, max);
     }
-    std::println("scroll x: {} and y: {}", x, y);
 }
 
 void InputSystem::updatekeycalls(int key, bool pressed)
