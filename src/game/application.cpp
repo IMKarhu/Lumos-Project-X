@@ -39,34 +39,25 @@ void Application::run()
 
     uint64_t framecount = 0;
     uint64_t lastfpsframe = 0;
-    float timeaccumulator = 0.0f;
-    float curfps = 0.0f;
+    double timeaccumulator = 0.0;
 
     while(m_engine.running())
     {
         m_engine.processEvents();
-        m_deltatime = m_engine.deltatime();
+        const double delta = m_engine.deltatime();
         framecount++;
-        timeaccumulator += m_deltatime.count() * 0.001f;
+        timeaccumulator += delta;
 
         if (timeaccumulator >= 1.0f) {
-            uint64_t framessincelastupdate = framecount - lastfpsframe;
-            double avgms = 0.0;
-            if (framessincelastupdate > 0 && timeaccumulator > 0.0f) {
-                curfps = static_cast<float>(static_cast<double>(framessincelastupdate) / static_cast<double>(timeaccumulator));
-                avgms = (timeaccumulator / static_cast<double>(framessincelastupdate)) * 1000.0;
-
-            } else {
-
-                curfps = std::max(curfps, 1.0f);
-                avgms = static_cast<double>(m_deltatime.count());
-            }
-            std::string m_titleAndfps = std::format("Lumos engine test. Fps: {} | avg Ms: {}",
-                    static_cast<int>(curfps), static_cast<int>(avgms));
-            m_engine.setTitle(m_titleAndfps);
+            const uint64_t framessincelastupdate = framecount - lastfpsframe;
+            const double fps = framessincelastupdate / timeaccumulator;
+            const double avgms = (timeaccumulator / framessincelastupdate) * 1000.0;
+            m_engine.setTitle(std::format("Lumos engine test. Fps: {:.5} | avg Ms: {:.2}", fps, avgms));
+            timeaccumulator = 0.0;
+            lastfpsframe = framecount;
         }
 
-        m_engine.update(m_deltatime);
+        m_engine.update(delta);
 
         m_engine.render(m_ecs);
     }

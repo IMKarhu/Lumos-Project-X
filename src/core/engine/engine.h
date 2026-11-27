@@ -17,12 +17,12 @@ namespace Lumos
         LumosEngine();
         void initEngine(int width, int height, const std::string& name);
         void run();
-        void update(std::chrono::milliseconds dt);
+        void update(double dt);
         void render(Ecs& ecs);
 
         ResourceManager* resourceManager() const;
         Window* window() const;
-        std::chrono::milliseconds deltatime();
+        double deltatime();
         bool running() const;
         void processEvents();
 
@@ -31,8 +31,8 @@ namespace Lumos
     private:
         bool m_initialized = false;
         bool m_running = true;
-        std::chrono::milliseconds m_deltatime{0};
-        uint64_t m_lastframeInMs = 0;
+        std::chrono::steady_clock::time_point m_lastframe;
+        bool m_firstframe = true;
 
         std::unique_ptr<Window> m_window;
         std::unique_ptr<Renderer> m_renderer;

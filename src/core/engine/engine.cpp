@@ -2,6 +2,7 @@
 
 #include <print>
 #include <stdexcept>
+#include <algorithm>
 #include "resources/textureatlas.h"
 
 namespace Lumos
@@ -56,7 +57,7 @@ namespace Lumos
         m_running = true;
     }
 
-    void LumosEngine::update(std::chrono::milliseconds dt)
+    void LumosEngine::update(double dt)
     {
     }
 
@@ -88,46 +89,6 @@ namespace Lumos
             renderdata.renderobjects.push_back(obj);
         }
         m_renderer->render(renderdata);
-        // auto atlas = m_resourcemanager->getResource<Lumos::TextureAtlas>("testsprite");
-        //
-        // RenderData renderdata{};
-        // renderdata.cameradata.position = {0.0f, 0.0f};
-        // renderdata.cameradata.size = {640, 320};
-        // RenderObject obj;
-        // obj.position = {0.0f, 0.0f};
-        // obj.size = {10.0f, 10.0f};
-        // obj.rotation = 0.0f;
-        // obj.color = {1.0f, 0.0f, 0.0f, 1.0f};
-        // obj.uvrect = atlas->uv("floor2");
-        // renderdata.renderobjects.push_back(obj);
-        // RenderObject obj2;
-        // obj2.position = {200.0f, 0.0f};
-        // obj2.size = {100.0f, 100.0f};
-        // obj2.rotation = 45.0f;
-        // obj2.color = {1.0f, 1.0f, 0.0f, 1.0f};
-        // obj2.uvrect = atlas->uv("floor");
-        // renderdata.renderobjects.push_back(obj2);
-        // RenderObject obj3;
-        // obj3.position = {0.0f, 100.0f};
-        // obj3.size = {100.0f, 100.0f};
-        // obj3.rotation = 90.0f;
-        // obj3.color = {0.5f, 1.0f, 1.0f, 1.0f};
-        // obj3.uvrect = {0.0f, 0.0f, 1.0f, 1.0f};
-        // renderdata.renderobjects.push_back(obj3);
-        // RenderObject obj4;
-        // obj4.position = {-200.0f, 0.0f};
-        // obj4.size = {100.0f, 100.0f};
-        // obj4.rotation = 90.0f;
-        // obj4.color = {0.0f, 0.0f, 1.0f, 1.0f};
-        // obj4.uvrect = {0.0f, 0.0f, 1.0f, 1.0f};
-        // renderdata.renderobjects.push_back(obj4);
-        // RenderObject obj5;
-        // obj5.position = {0.0f, -100.0f};
-        // obj5.size = {100.0f, 100.0f};
-        // obj5.rotation = 0.0f;
-        // obj5.color = {0.0f, 1.0f, 0.0f, 1.0f};
-        // obj5.uvrect = {0.0f, 0.0f, 1.0f, 1.0f};
-        // renderdata.renderobjects.push_back(obj5);
     }
 
     ResourceManager* LumosEngine::resourceManager() const
@@ -164,19 +125,18 @@ namespace Lumos
     }
 
     /********PRIVATE********/
-    std::chrono::milliseconds LumosEngine::deltatime()
+    double LumosEngine::deltatime()
     {
-        uint64_t curtime = static_cast<uint64_t>(
-                std::chrono::duration_cast<std::chrono::milliseconds>(
-                    std::chrono::steady_clock::now().time_since_epoch()).count());
-
-        if (m_lastframeInMs == 0) {
-            m_lastframeInMs = curtime;
-            return std::chrono::milliseconds(16);
+        const auto cur = std::chrono::steady_clock::now();
+        if (m_firstframe) {
+            m_lastframe = cur;
+            m_firstframe = false;
+            return 0.0;
         }
-        uint64_t delta  = curtime - m_lastframeInMs;
-        m_lastframeInMs = curtime;
-        return std::chrono::milliseconds(static_cast<long long>(delta));
+        const std::chrono::duration<double> delta  = cur - m_lastframe;
+        m_lastframe = cur;
+        constexpr double maxdelta = 0.1;
+        return std::min(delta.count(), maxdelta);
     }
 
     void LumosEngine::resize(int width, int height)

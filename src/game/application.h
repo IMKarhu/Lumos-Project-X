@@ -13,6 +13,5 @@ private:
     Lumos::LumosEngine m_engine;
     Ecs m_ecs;
     InputSystem m_inputsystem{m_ecs};
-    std::chrono::milliseconds m_deltatime{0};
     uint64_t m_lastframeInMs = 0;
 };
