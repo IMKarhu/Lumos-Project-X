@@ -706,16 +706,31 @@ namespace Lumos
         int height;
         m_window.windowDimensions(width, height);
         while (width <= 0 || height <= 0) {
-            if (!m_window.shouldClose()) {
+            if (m_window.shouldClose()) {
                 return;
             }
-            m_window.windowDimensions(width, height);
             m_window.waitEvents();
+            m_window.windowDimensions(width, height);
         }
 
         VK_CHECK(vkDeviceWaitIdle(m_device->device()));
         auto replacement = std::make_unique<SwapChain>(*m_device, m_window, m_config, m_swapchain->swapchain());
         m_swapchain = std::move(replacement);
+
+        // if swapchain image count changes during recreate
+        // destroy and recreate semaphores as well which depend on swapchain image count.
+        if (m_swapchain->images().size() != m_renderfinishedsemaphore.size()) {
+            for (size_t i = 0; i < m_renderfinishedsemaphore.size(); ++i) {
+                vkDestroySemaphore(m_device->device(), m_renderfinishedsemaphore[i], nullptr);
+            }
+            m_renderfinishedsemaphore.resize(m_swapchain->images().size());
+            VkSemaphoreCreateInfo info {
+                .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
+            };
+            for (size_t i = 0; i < m_renderfinishedsemaphore.size(); ++i) {
+                VK_CHECK(vkCreateSemaphore(m_device->device(), &info, nullptr, &m_renderfinishedsemaphore[i]));
+            }
+        }
         m_framebufferresized = false;
     }
 
