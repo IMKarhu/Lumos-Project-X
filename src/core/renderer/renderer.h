@@ -104,11 +104,11 @@ namespace Lumos
         {
             VkCommandBuffer cmdbuf = VK_NULL_HANDLE;
             VkSemaphore imageavailablesemaphore = VK_NULL_HANDLE;
-            VkSemaphore renderfinishedsemaphore = VK_NULL_HANDLE;
             VkFence inflightfence = VK_NULL_HANDLE;
             std::unique_ptr<Buffer> camerabuffer;
             std::unique_ptr<Buffer> entitybuffer;
         };
+        std::vector<VkSemaphore> m_renderfinishedsemaphore;
         std::vector<FrameData> m_framedata;
         VkCommandPool m_commandpool = VK_NULL_HANDLE;
 

@@ -98,9 +98,12 @@ namespace Lumos
         vkDestroyDescriptorPool(m_device->device(), m_descriptorpool, nullptr);
         for (size_t i = 0; i < m_framedata.size(); ++i) {
             vkDestroySemaphore(m_device->device(), m_framedata[i].imageavailablesemaphore, nullptr);
-            vkDestroySemaphore(m_device->device(), m_framedata[i].renderfinishedsemaphore, nullptr);
             vkDestroyFence(m_device->device(), m_framedata[i].inflightfence, nullptr);
         }
+        for (size_t i = 0; i < m_renderfinishedsemaphore.size(); ++i) {
+            vkDestroySemaphore(m_device->device(), m_renderfinishedsemaphore[i], nullptr);
+        }
+
         vkDestroyDescriptorSetLayout(m_device->device(), m_camerasetlayout, nullptr);
         vkDestroyDescriptorSetLayout(m_device->device(), m_entitysetlayout, nullptr);
         vkDestroyDescriptorSetLayout(m_device->device(), m_texturelayout, nullptr);
@@ -308,7 +311,7 @@ namespace Lumos
         submitinfo.pWaitDstStageMask = waitStages;
         submitinfo.commandBufferCount = 1;
         submitinfo.pCommandBuffers = &frame.cmdbuf;
-        VkSemaphore signalSemaphores[] = { frame.renderfinishedsemaphore };
+        VkSemaphore signalSemaphores[] = { m_renderfinishedsemaphore[m_imageindex] };
         submitinfo.signalSemaphoreCount = 1;
         submitinfo.pSignalSemaphores = signalSemaphores;
 
@@ -396,7 +399,7 @@ namespace Lumos
             .layerCount = 1
         };
         if (newlayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL) {
-            barrier.srcStageMask = VK_PIPELINE_STAGE_2_NONE;
+            barrier.srcStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
             barrier.srcAccessMask = VK_ACCESS_2_NONE;
             barrier.dstStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
             barrier.dstAccessMask = VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT;
@@ -578,8 +581,11 @@ namespace Lumos
         fenceinfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
         for (auto& data : m_framedata) {
             VK_CHECK(vkCreateSemaphore(m_device->device(), &semaphoreinfo, nullptr, &data.imageavailablesemaphore));
-            VK_CHECK(vkCreateSemaphore(m_device->device(), &semaphoreinfo, nullptr, &data.renderfinishedsemaphore));
             VK_CHECK(vkCreateFence(m_device->device(), &fenceinfo, nullptr, &data.inflightfence));
+        }
+        m_renderfinishedsemaphore.resize(m_swapchain->images().size());
+        for (size_t i = 0; i < m_renderfinishedsemaphore.size(); ++i) {
+            VK_CHECK(vkCreateSemaphore(m_device->device(), &semaphoreinfo, nullptr, &m_renderfinishedsemaphore[i]));
         }
     }
 
